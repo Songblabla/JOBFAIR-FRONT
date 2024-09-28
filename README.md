@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Next.js 項目
 
-## Getting Started
+呢個係用 [Next.js](https://nextjs.org) 整嘅項目，用咗 [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) 嚟引導創建。
 
-First, run the development server:
+## 點樣開始
+
+首先，開發伺服器要咁樣起：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# 或者
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+用瀏覽器開 [http://localhost:3000](http://localhost:3000) 就睇到結果嘞。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+想改頁面嘅話，就改 `app/page.tsx` 個檔案。改完之後，個頁面會自動更新㗎。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+呢個項目用咗 [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) 嚟自動優化同載入 [Geist](https://vercel.com/font)，呢個係 Vercel 最新整嘅字體。
 
-## Learn More
+## 想知多啲？
 
-To learn more about Next.js, take a look at the following resources:
+如果你想深入了解 Next.js，可以睇下呢啲資料：
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js 文檔](https://nextjs.org/docs) - 學 Next.js 嘅功能同 API。
+- [學習 Next.js](https://nextjs.org/learn) - 互動式嘅 Next.js 教程。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+你都可以睇下 [Next.js 嘅 GitHub 倉庫](https://github.com/vercel/next.js)，歡迎你提意見同貢獻！
 
-## Deploy on Vercel
+## 喺 Vercel 度部署
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+最簡單部署你個 Next.js app 嘅方法就係用 [Vercel 平台](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)，佢哋就係整 Next.js 嗰班人嚟㗎。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+想知更多部署嘅詳情，睇下我哋嘅 [Next.js 部署文檔](https://nextjs.org/docs/app/building-your-application/deploying) 啦。
