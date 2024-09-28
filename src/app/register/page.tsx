@@ -48,6 +48,7 @@ export default function RegisterPage() {
   }, [password]);
 
   const toggleTheme = () => {
+    console.log(theme);
     setTheme(theme === "light" ? "dark" : "light")
   }
 
@@ -76,9 +77,9 @@ export default function RegisterPage() {
 
   const darkGradientStyle = {
     backgroundImage: `linear-gradient(to bottom left, 
-        hsl(${randomHue}, 50%, 87%), 
-        hsl(${(randomHue + 30) % 360}, 45%, 89%), 
-        hsl(${(randomHue + 60) % 360}, 40%, 88%))`
+        hsl(${randomHue}, 50%, 35%), 
+        hsl(${(randomHue + 30) % 360}, 45%, 40%), 
+        hsl(${(randomHue + 60) % 360}, 40%, 45%))`
   }
 
   return (
@@ -88,19 +89,23 @@ export default function RegisterPage() {
     >
       <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen">
         <header className="text-center mb-16 relative">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleTheme}
-            className="absolute right-0 top-0"
-          >
-            {theme === "light" ? (
-              <Moon className="h-[1.2rem] w-[1.2rem]" />
-            ) : (
-              <Sun className="h-[1.2rem] w-[1.2rem]" />
-            )}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
+
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              className="absolute right-0 top-0 z-10"
+            >
+              {theme === "light" ? (
+                <Moon className="h-[1.2rem] w-[1.2rem]" />
+              ) : (
+                <Sun className="h-[1.2rem] w-[1.2rem]" />
+              )}
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          </div>
+
           <motion.h1 
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -113,7 +118,7 @@ export default function RegisterPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-xl text-gray-600 dark:text-gray-300"
+            className="text-xl text-gray-600 dark:text-gray-200"
           >
             Create your account
           </motion.p>
@@ -125,7 +130,7 @@ export default function RegisterPage() {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="max-w-md mx-auto w-full"
         >
-          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-lg">
+          <Card className="bg-white dark:bg-zinc-900 backdrop-blur-sm shadow-lg">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -192,7 +197,7 @@ export default function RegisterPage() {
           </Card>
         </motion.div>
 
-        <footer className="text-center text-gray-600 dark:text-gray-400 text-sm mt-16">
+        <footer className="text-center text-gray-600 dark:text-gray-200 text-sm mt-16">
           © 2024 Job Fair. All rights reserved.
         </footer>
       </div>

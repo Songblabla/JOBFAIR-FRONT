@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ChevronRight } from "lucide-react"
-import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronRight } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
 
 interface User {
   _id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  role: "user" | "admin";
 }
 
 interface HomeProps {
@@ -21,39 +21,42 @@ interface HomeProps {
 }
 
 export default function Home({ user }: HomeProps) {
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    setMounted(true);
+  }, []);
 
   const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light")
-  }
+    setTheme(theme === "light" ? "dark" : "light");
+  };
 
   if (!mounted) {
-    return null
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-      <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen">
+      <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen relative">
         <header className="text-center mb-16 relative">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleTheme}
-            className="absolute right-0 top-0"
-          >
-            {theme === "light" ? (
-              <Moon className="h-[1.2rem] w-[1.2rem]" />
-            ) : (
-              <Sun className="h-[1.2rem] w-[1.2rem]" />
-            )}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-          <motion.h1 
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+              className="absolute right-0 top-0 z-10"
+            >
+              {theme === "light" ? (
+                <Moon className="h-[1.2rem] w-[1.2rem]" />
+              ) : (
+                <Sun className="h-[1.2rem] w-[1.2rem]" />
+              )}
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          </div>
+
+          <motion.h1
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -61,7 +64,7 @@ export default function Home({ user }: HomeProps) {
           >
             Job Fair
           </motion.h1>
-          <motion.p 
+          <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
@@ -71,7 +74,7 @@ export default function Home({ user }: HomeProps) {
           </motion.p>
         </header>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.8 }}
@@ -115,7 +118,7 @@ export default function Home({ user }: HomeProps) {
         </motion.div>
 
         {user && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 0.8 }}
