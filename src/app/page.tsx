@@ -30,8 +30,8 @@ export default function Home({ user }: HomeProps) {
   }
 
   return (
-    <div className="bg-background text-foreground transition-colors duration-300">
-      <div className="container mx-auto px-4 py-16 flex flex-col justify-between relative">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      <div className="min-h-screen container mx-auto px-4 py-16 flex flex-col justify-between relative">
         <header className="text-center mb-16 relative">
           <motion.h1
             initial={{ opacity: 0, y: -50 }}
@@ -110,10 +110,10 @@ export default function Home({ user }: HomeProps) {
           </motion.div>
         )}
 
-      </div>
-      <footer className="relative bottom-0 mt-16 text-center text-muted-foreground text-sm">
-            © 2024 Job Fair. All rights reserved.
+        <footer className="relative bottom-0 text-center text-muted-foreground text-sm">
+          © 2024 Job Fair. All rights reserved.
         </footer>
+      </div>
     </div>
   );
 }
