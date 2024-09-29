@@ -9,6 +9,9 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+		fontFamily: {
+			sans: ["sf-pro"]
+		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -57,11 +60,11 @@ const config: Config = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
 		container: {
-		center: true,
-		padding: "2rem",
-		screens: {
-			"2xl": "1400px",
-		},
+			center: true,
+			padding: "2rem",
+			screens: {
+				"2xl": "1400px",
+			},
 		},
   	}
   },

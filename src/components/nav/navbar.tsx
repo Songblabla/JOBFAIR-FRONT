@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ModeToggle } from '../theme/mode';
 
 interface NavbarProps {
   user: { name: string } | null;
@@ -31,6 +32,9 @@ const navItems = [
 
 export default function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+
+  if (isAuthPage) return null;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -96,6 +100,9 @@ export default function Navbar({ user }: NavbarProps) {
                 <Button variant="ghost">Log in</Button>
               </Link>
             )}
+            <div className='ml-2'>
+              <ModeToggle/>
+            </div>
           </nav>
         </div>
       </div>

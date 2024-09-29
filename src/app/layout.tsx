@@ -35,10 +35,6 @@ export default function RootLayout({
           </div>
         </ThemeProvider>
       </body>
-
-      <footer className="text-center text-muted-foreground text-sm mt-16 mb-8">
-          © 2024 Job Fair. All rights reserved.
-      </footer>
     </html>
   )
 }
