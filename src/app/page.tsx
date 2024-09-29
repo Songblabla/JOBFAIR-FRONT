@@ -132,10 +132,6 @@ export default function Home({ user }: HomeProps) {
             </Link>
           </motion.div>
         )}
-
-        <footer className="text-center text-muted-foreground text-sm mt-16">
-          © 2024 Job Fair. All rights reserved.
-        </footer>
       </div>
     </div>
   );

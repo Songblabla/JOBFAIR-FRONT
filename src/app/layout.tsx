@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from 'next-themes'
+import Navbar from "@/components/nav/navbar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,12 +26,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body>
+    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="min-h-screen bg-background font-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <div className="relative flex min-h-screen flex-col">
+            <Navbar user={null} />
+            <div className="flex-1">{children}</div>
+          </div>
         </ThemeProvider>
       </body>
+
+      <footer className="text-center text-muted-foreground text-sm mt-16 mb-8">
+          © 2024 Job Fair. All rights reserved.
+      </footer>
     </html>
   )
 }
