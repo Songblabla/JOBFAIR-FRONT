@@ -113,7 +113,7 @@ export default function LoginPage() {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="max-w-md mx-auto w-full"
         >
-          <Card className="bg-white dark:bg-gray-800 backdrop-blur-sm shadow-lg">
+          <Card className="bg-white dark:bg-gray-900 backdrop-blur-sm shadow-lg">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -123,7 +123,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
+                    className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
                   />
                 </div>
                 <div>
@@ -133,7 +133,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
+                    className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
                   />
                 </div>
                 <Button type="submit" className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800">
