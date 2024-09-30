@@ -17,7 +17,7 @@ import api from '@/lib/axios';
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  tel: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
+  tel: z.string().regex(/^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/, 'Invalid phone number'),
   role: z.enum(['user', 'admin']).default('user'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string()
@@ -84,12 +84,16 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
     setError('');
     try {
       const { confirmPassword, ...registerData } = data;
-      const response = await api.post('/auth/register', registerData);
+      const submitData = { 
+          ...registerData, 
+          createdAt: new Date().toISOString().split("T")[0] 
+      };
+
+      const response = await api.post('/auth/register', submitData);
       const userData = response.data;
-      
+
+      console.log("userData", userData);
       localStorage.setItem('token', userData.token);
-      setUser(userData.user);
-      setIsAdmin(userData.user.role === 'admin');
 
       router.push('/');
     } catch (error) {

@@ -8,15 +8,15 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useTheme } from "next-themes"
-import { Moon, Sun } from "lucide-react"
-import api from '@/lib/axios';
+import { Moon, Sun, ArrowRight } from "lucide-react"
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import api from '@/lib/axios';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -36,9 +36,9 @@ interface LoginProps {
 export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
   const [error, setError] = useState('');
   const router = useRouter();
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const [randomHue, setRandomHue] = useState(0)
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [randomHue, setRandomHue] = useState(0);
 
   const { 
     register, 
@@ -62,13 +62,15 @@ export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
 
     try {
       const response = await api.post('/auth/login', data);
-      const userData = response.data;
-      
-      localStorage.setItem('token', userData.token);
-      setUser(userData.user);
-      setIsAdmin(userData.user.role === 'admin');
-
-      router.push('/');
+      if (response.status === 201) {
+        const userData = response.data;
+        localStorage.setItem('token', userData.token);
+        setUser(userData.user);
+        setIsAdmin(userData.user.role === 'admin');
+        router.push('/');
+      } else {
+        throw new Error('Login failed');
+      }
     } catch (error) {
       console.error('Login failed:', error);
       setError('Invalid email or password. Please try again.');
@@ -172,6 +174,7 @@ export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Signing In...' : 'Sign In'}
+                  <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
                 </Button>
               </form>
               <p className="text-center mt-4 text-gray-600 dark:text-gray-300">
