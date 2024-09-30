@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { UserCircle, Menu } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { UserCircle, Menu, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -19,9 +19,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from '../theme/mode';
+import api from '@/lib/axios'; 
 
-interface NavbarProps {
-  user: { name: string } | null;
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  tel: string;
+  role: string;
 }
 
 const navItems = [
@@ -30,11 +35,48 @@ const navItems = [
   { name: 'Bookings', path: '/booking' },
 ];
 
-export default function Navbar({ user }: NavbarProps) {
+export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const isAuthPage = pathname === '/login' || pathname === '/register';
 
   if (isAuthPage) return null;
+
+  const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string>("");
+
+  const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const response = await api.get('/auth/me');
+      if (response.data.success) {
+        setUser(response.data.data);
+      } else {
+        setError('Failed to load user profile.');
+        setUser(null);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setError('Failed to load user profile.');
+      setUser(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    router.push('/');
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -70,28 +112,34 @@ export default function Navbar({ user }: NavbarProps) {
         </Sheet>
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none">
-            {/* Add search functionality here if needed */}
+            {/* Optionally, add search functionality here */}
           </div>
           <nav className="flex items-center">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <UserCircle className="h-8 w-8" />
+                  <Button variant="ghost" className="flex items-center space-x-2">
+                    <UserCircle className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-[var(--radix-dropdown-trigger-width)]">
+                  <DropdownMenuLabel className="font-normal">
+                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    Profile
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    Settings
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    Log out
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -101,7 +149,7 @@ export default function Navbar({ user }: NavbarProps) {
               </Link>
             )}
             <div className='ml-2'>
-              <ModeToggle/>
+              <ModeToggle />
             </div>
           </nav>
         </div>
@@ -112,7 +160,6 @@ export default function Navbar({ user }: NavbarProps) {
 
 function MobileNav() {
   const pathname = usePathname();
-
   return (
     <div className="flex flex-col space-y-3">
       {navItems.map((item) => (

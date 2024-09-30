@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,17 @@ interface HomeProps {
 
 export default function Home({ user }: HomeProps) {
   const [mounted, setMounted] = useState(false);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      router.push("/booking");
+    }
+  }, [router]);
 
   useEffect(() => {
     setMounted(true);

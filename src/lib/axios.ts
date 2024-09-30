@@ -10,7 +10,7 @@ const api = axios.create({
 // console.log("Backend URL", process.env.NEXT_PUBLIC_BACKEND_URL);
 
 api.interceptors.request.use((config) => {
-  console.log(config);
+  // console.log(config);
   const token = localStorage.getItem('token'); 
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;

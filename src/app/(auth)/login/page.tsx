@@ -60,13 +60,14 @@ export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
   const onSubmit = async (data: LoginFormData) => {
     setError('');
 
+    console.log(data);
+
     try {
       const response = await api.post('/auth/login', data);
-      if (response.status === 201) {
+      console.log(response);
+      if (response.status === 200) { // Swagger said 201 ??
         const userData = response.data;
         localStorage.setItem('token', userData.token);
-        setUser(userData.user);
-        setIsAdmin(userData.user.role === 'admin');
         router.push('/');
       } else {
         throw new Error('Login failed');
