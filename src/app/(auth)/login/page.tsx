@@ -9,27 +9,44 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useTheme } from "next-themes"
 import { Moon, Sun } from "lucide-react"
+import api from '@/lib/axios';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 interface User {
     _id: string;
     name: string;
     email: string;
     role: 'user' | 'admin';
-  }
-  
-  interface LoginProps {
+}
+
+interface LoginProps {
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
     setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
-  }
-  
+}
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
+  const [error, setError] = useState('');
   const router = useRouter();
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [randomHue, setRandomHue] = useState(0)
+
+  const { 
+    register, 
+    handleSubmit, 
+    formState: { errors, isSubmitting } 
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema)
+  });
 
   useEffect(() => {
     setMounted(true)
@@ -40,31 +57,41 @@ export default function LoginPage() {
     setTheme(theme === "light" ? "dark" : "light")
   }
 
-  const handleSubmit = async (e: LoginProps) => {
-    // e.preventDefault();
-    // Handle login logic here
-    console.log('Login attempt with:', email, password);
-    // For now, just redirect to home page
-    router.push('/');
+  const onSubmit = async (data: LoginFormData) => {
+    setError('');
+
+    try {
+      const response = await api.post('/auth/login', data);
+      const userData = response.data;
+      
+      localStorage.setItem('token', userData.token);
+      setUser(userData.user);
+      setIsAdmin(userData.user.role === 'admin');
+
+      router.push('/');
+    } catch (error) {
+      console.error('Login failed:', error);
+      setError('Invalid email or password. Please try again.');
+    }
   };
 
   if (!mounted) {
     return null
   }
 
-    const gradientStyle = {
+  const gradientStyle = {
     backgroundImage: `linear-gradient(to bottom right, 
         hsl(${randomHue}, 60%, 90%), 
         hsl(${(randomHue + 30) % 360}, 55%, 92%), 
         hsl(${(randomHue + 60) % 360}, 50%, 91%))`
-    }
+  }
 
-    const darkGradientStyle = {
-      backgroundImage: `linear-gradient(to bottom left, 
-          hsl(${randomHue}, 50%, 35%), 
-          hsl(${(randomHue + 30) % 360}, 45%, 40%), 
-          hsl(${(randomHue + 60) % 360}, 40%, 45%))`
-    }  
+  const darkGradientStyle = {
+    backgroundImage: `linear-gradient(to bottom left, 
+        hsl(${randomHue}, 50%, 35%), 
+        hsl(${(randomHue + 30) % 360}, 45%, 40%), 
+        hsl(${(randomHue + 60) % 360}, 40%, 45%))`
+  }  
 
   return (
     <div 
@@ -115,29 +142,36 @@ export default function LoginPage() {
         >
           <Card className="bg-white dark:bg-gray-900 backdrop-blur-sm shadow-lg">
             <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <Input
                     type="email"
                     placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    {...register('email')}
                     className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                  )}
                 </div>
                 <div>
                   <Input
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    {...register('password')}
                     className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
                   />
+                  {errors.password && (
+                    <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
+                  )}
                 </div>
-                <Button type="submit" className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800">
-                  Sign In
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Signing In...' : 'Sign In'}
                 </Button>
               </form>
               <p className="text-center mt-4 text-gray-600 dark:text-gray-300">

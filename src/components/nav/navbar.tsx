@@ -27,7 +27,7 @@ interface NavbarProps {
 const navItems = [
   { name: 'Home', path: '/' },
   { name: 'Companies', path: '/companies' },
-  { name: 'Bookings', path: '/bookings' },
+  { name: 'Bookings', path: '/booking' },
 ];
 
 export default function Navbar({ user }: NavbarProps) {

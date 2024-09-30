@@ -9,11 +9,30 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useTheme } from "next-themes"
 import { Moon, Sun, ArrowRight } from "lucide-react"
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import api from '@/lib/axios';
+
+const registerSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  tel: z.string().regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number'),
+  role: z.enum(['user', 'admin']).default('user'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type RegisterFormData = z.infer<typeof registerSchema>;
 
 interface User {
   _id: string;
   name: string;
   email: string;
+  tel: string;
   role: 'user' | 'admin';
 }
 
@@ -22,16 +41,27 @@ interface RegisterProps {
   setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function RegisterPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [randomHue, setRandomHue] = useState(0)
+
+  const { 
+    register, 
+    handleSubmit, 
+    watch,
+    formState: { errors, isSubmitting } 
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      role: 'user'
+    }
+  });
+
+  const password = watch("password");
 
   useEffect(() => {
     setMounted(true)
@@ -39,29 +69,33 @@ export default function RegisterPage() {
   }, [])
 
   useEffect(() => {
-    if (password.length > 0) {
+    if (password && password.length > 0) {
       setShowConfirmPassword(true);
     } else {
       setShowConfirmPassword(false);
-      setConfirmPassword('');
     }
   }, [password]);
 
   const toggleTheme = () => {
-    console.log(theme);
     setTheme(theme === "light" ? "dark" : "light")
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (password !== confirmPassword) {
-      alert("Passwords don't match!");
-      return;
+  const onSubmit = async (data: RegisterFormData) => {
+    setError('');
+    try {
+      const { confirmPassword, ...registerData } = data;
+      const response = await api.post('/auth/register', registerData);
+      const userData = response.data;
+      
+      localStorage.setItem('token', userData.token);
+      setUser(userData.user);
+      setIsAdmin(userData.user.role === 'admin');
+
+      router.push('/');
+    } catch (error) {
+      console.error('Registration failed:', error);
+      setError('Registration failed. Please try again.');
     }
-    // Handle registration logic here
-    console.log('Registration attempt with:', name, email, password);
-    // For now, just redirect to home page
-    router.push('/');
   };
 
   if (!mounted) {
@@ -89,7 +123,6 @@ export default function RegisterPage() {
     >
       <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen">
         <header className="text-center mb-16 relative">
-
           <div className="relative">
             <Button
               variant="outline"
@@ -132,36 +165,42 @@ export default function RegisterPage() {
         >
           <Card className="bg-white dark:bg-zinc-900 backdrop-blur-sm shadow-lg">
             <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
                   <Input
                     type="text"
                     placeholder="Full Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
+                    {...register('name')}
                     className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                   />
+                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
                 </div>
                 <div>
                   <Input
                     type="email"
                     placeholder="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+                    {...register('email')}
                     className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                   />
+                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+                </div>
+                <div>
+                  <Input
+                    type="tel"
+                    placeholder="Phone Number"
+                    {...register('tel')}
+                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
+                  />
+                  {errors.tel && <p className="text-red-500 text-sm mt-1">{errors.tel.message}</p>}
                 </div>
                 <div>
                   <Input
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    {...register('password')}
                     className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                   />
+                  {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
                 </div>
                 <AnimatePresence>
                   {showConfirmPassword && (
@@ -174,16 +213,20 @@ export default function RegisterPage() {
                       <Input
                         type="password"
                         placeholder="Confirm Password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        required
+                        {...register('confirmPassword')}
                         className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                       />
+                      {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>}
                     </motion.div>
                   )}
                 </AnimatePresence>
-                <Button type="submit" className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800 group">
-                  Create Account
+                {error && <p className="text-red-500 text-sm">{error}</p>}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800 group"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Creating Account...' : 'Create Account'}
                   <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
                 </Button>
               </form>
