@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/lib/axios';
 import { motion } from 'framer-motion';
 import { format } from "date-fns";
 import { CalendarIcon, ChevronRight, Plus, X } from 'lucide-react';
@@ -59,7 +59,7 @@ export default function Bookings({ user, isAdmin }: BookingsProps) {
 
   const fetchBookings = async () => {
     try {
-      const response = await axios.get<Booking[]>('/api/bookings', {
+      const response = await api.get<Booking[]>('/api/bookings', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setBookings(response.data);

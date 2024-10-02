@@ -28,6 +28,7 @@ export default function Home({ user }: HomeProps) {
     setMounted(true);
 
     const token = localStorage.getItem("token");
+    console.log("TOKEN", token);
     if (token) {
       router.push("/booking");
     }
