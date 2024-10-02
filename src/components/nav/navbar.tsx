@@ -31,7 +31,7 @@ interface User {
 
 const navItems = [
   { name: 'Home', path: '/' },
-  { name: 'Companies', path: '/companies' },
+  { name: 'Companies', path: '/company' },
   { name: 'Bookings', path: '/booking' },
 ];
 
