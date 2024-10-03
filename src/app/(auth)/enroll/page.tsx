@@ -14,11 +14,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/axios';
 
-const registerSchema = z.object({
+const enrollSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   tel: z.string().regex(/^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/, 'Invalid phone number'),
-  role: z.enum(['user', 'admin']).default('user'),
+  companyName: z.string().min(2, 'Company name must be at least 2 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -26,7 +26,7 @@ const registerSchema = z.object({
   path: ["confirmPassword"],
 });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type EnrollFormData = z.infer<typeof enrollSchema>;
 
 interface User {
   _id: string;
@@ -36,12 +36,12 @@ interface User {
   role: 'user' | 'admin';
 }
 
-interface RegisterProps {
+interface EnrollProps {
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
+export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -54,11 +54,8 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
     handleSubmit, 
     watch,
     formState: { errors, isSubmitting } 
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      role: 'user'
-    }
+  } = useForm<EnrollFormData>({
+    resolver: zodResolver(enrollSchema)
   });
 
   const password = watch("password");
@@ -80,18 +77,19 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
     setTheme(theme === "light" ? "dark" : "light")
   }
 
-  const handleHomeButton = () => {
-    router.push("/");
-  }
-
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: EnrollFormData) => {
     setError('');
     try {
-      const { confirmPassword, ...registerData } = data;
+      const { confirmPassword, companyName, ...enrollData } = data;
+      const combinedName = `${data.name}@${companyName}`;
       const submitData = { 
-          ...registerData, 
-          createdAt: new Date().toISOString().split("T")[0] 
+        ...enrollData,
+        name: combinedName, 
+        role: 'admin',
+        createdAt: new Date().toISOString().split("T")[0] 
       };
+
+      console.log("Sending Data:", submitData);
 
       const response = await api.post('/auth/register', submitData);
       const userData = response.data;
@@ -100,28 +98,33 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
       localStorage.setItem('token', userData.token);
 
       router.push('/');
+
     } catch (error) {
-      console.error('Registration failed:', error);
-      setError('Registration failed. Please try again.');
+      console.error('Enrollment failed:', error);
+      setError('Enrollment failed. Please try again.');
     }
   };
+
+  const handleHomeButton = () => {
+    router.push("/");
+  }
 
   if (!mounted) {
     return null
   }
 
   const gradientStyle = {
-    backgroundImage: `linear-gradient(to bottom left, 
-        hsl(${randomHue}, 60%, 92%), 
-        hsl(${(randomHue + 30) % 360}, 55%, 94%), 
-        hsl(${(randomHue + 60) % 360}, 50%, 93%))`
+    backgroundImage: `linear-gradient(to bottom right, 
+        hsl(${randomHue}, 60%, 94%), 
+        hsl(${(randomHue + 30) % 360}, 55%, 96%), 
+        hsl(${(randomHue + 60) % 360}, 50%, 95%))`
   }
 
   const darkGradientStyle = {
-    backgroundImage: `linear-gradient(to bottom left, 
-        hsl(${randomHue}, 50%, 35%), 
-        hsl(${(randomHue + 30) % 360}, 45%, 40%), 
-        hsl(${(randomHue + 60) % 360}, 40%, 45%))`
+    backgroundImage: `linear-gradient(to bottom right, 
+        hsl(${randomHue}, 50%, 30%), 
+        hsl(${(randomHue + 30) % 360}, 45%, 35%), 
+        hsl(${(randomHue + 60) % 360}, 40%, 40%))`
   }
 
   return (
@@ -163,7 +166,7 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
             transition={{ duration: 0.8 }}
             className="text-6xl font-bold mb-4"
           >
-            Join Job Fair
+            Enroll Your Company
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -171,7 +174,7 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="text-xl text-gray-600 dark:text-gray-200"
           >
-            Create your account
+            Join Job Fair as a Company Admin
           </motion.p>
         </header>
 
@@ -181,7 +184,7 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="max-w-md mx-auto w-full"
         >
-          <Card className="bg-white dark:bg-zinc-900 backdrop-blur-sm shadow-lg">
+          <Card className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>
@@ -192,6 +195,15 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
                     className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                   />
                   {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+                </div>
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Company Name"
+                    {...register('companyName')}
+                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
+                  />
+                  {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName.message}</p>}
                 </div>
                 <div>
                   <Input
@@ -241,16 +253,16 @@ export default function RegisterPage({ setUser, setIsAdmin }: RegisterProps) {
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <Button 
                   type="submit" 
-                  className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800 group"
+                  className="w-full bg-zinc-600 hover:bg-zinc-700 text-white dark:bg-zinc-200 dark:hover:bg-zinc-400 dark:text-zinc-800 group"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Creating Account...' : 'Create Account'}
+                  {isSubmitting ? 'Enrolling...' : 'Enroll Company'}
                   <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
                 </Button>
               </form>
-              <p className="text-center mt-4 text-gray-600 dark:text-gray-300">
-                Already have an account?{' '}
-                <Link href="/login" className="text-gray-800 dark:text-gray-200 hover:underline font-semibold">
+              <p className="text-center mt-4 text-gray-600 dark:text-gray-200">
+                Already enrolled?{' '}
+                <Link href="/login" className="text-zinc-600 dark:text-zinc-200 hover:underline font-semibold">
                   Sign in
                 </Link>
               </p>

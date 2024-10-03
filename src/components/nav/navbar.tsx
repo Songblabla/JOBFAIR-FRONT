@@ -38,7 +38,7 @@ const navItems = [
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const isAuthPage = pathname === '/login' || pathname === '/register';
+  const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/enroll';
 
   if (isAuthPage) return null;
 

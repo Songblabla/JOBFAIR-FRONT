@@ -3,17 +3,8 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from 'next-themes'
 import Navbar from "@/components/nav/navbar";
+import ProtectedRoute from "@/components/protected/protectedRoute";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -26,15 +17,17 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="relative flex min-h-screen flex-col">
-            <Navbar />
-            <div className="flex-1">{children}</div>
-          </div>
-        </ThemeProvider>
-      </body>
+    <html lang="en" suppressHydrationWarning>
+        <body className="min-h-screen bg-background font-sans antialiased">
+          <ProtectedRoute>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+              <div className="relative flex min-h-screen flex-col">
+                <Navbar />
+                <div className="flex-1">{children}</div>
+              </div>
+            </ThemeProvider>
+          </ProtectedRoute>
+        </body>
     </html>
   )
 }
