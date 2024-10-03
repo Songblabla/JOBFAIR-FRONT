@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { UserCircle, Menu, User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { UserCircle, Menu, User, LogOut } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -43,13 +43,14 @@ export default function Navbar() {
   if (isAuthPage) return null;
 
   const [user, setUser] = useState<User | null>(null);
-  const [error, setError] = useState<string>("");
+  const [isTokenChecked, setIsTokenChecked] = useState(false);
 
   const fetchUser = useCallback(async () => {
     const token = localStorage.getItem('token');
 
     if (!token) {
       setUser(null);
+      setIsTokenChecked(true);
       return;
     }
 
@@ -58,13 +59,13 @@ export default function Navbar() {
       if (response.data.success) {
         setUser(response.data.data);
       } else {
-        setError('Failed to load user profile.');
         setUser(null);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setError('Failed to load user profile.');
       setUser(null);
+    } finally {
+      setIsTokenChecked(true);
     }
   }, []);
 
@@ -115,38 +116,35 @@ export default function Navbar() {
             {/* Optionally, add search functionality here */}
           </div>
           <nav className="flex items-center">
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
-                    <UserCircle className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[var(--radix-dropdown-trigger-width)]">
-                  <DropdownMenuLabel className="font-normal">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link href="/login" passHref>
-                <Button variant="ghost">Log in</Button>
-              </Link>
+            {isTokenChecked && (
+              user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center space-x-2 border-none">
+                      <UserCircle className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[var(--radix-dropdown-trigger-width)]">
+                    <DropdownMenuLabel className="font-normal">
+                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link href="/login" passHref>
+                  <Button variant="ghost">Log in</Button>
+                </Link>
+              )
             )}
             <div className='ml-2'>
               <ModeToggle />

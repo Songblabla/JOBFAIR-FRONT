@@ -136,7 +136,7 @@ export default function Bookings({ user, isAdmin }: BookingsProps) {
             transition={{ duration: 0.8 }}
             className="text-6xl font-bold mb-4"
           >
-            Interview Bookings
+            Company
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}

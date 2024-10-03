@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const PUBLIC_PATHS = ['/', '/login', '/register', '/enroll'];
-const DEFAULT_PROTECTED_PATH = "/booking";
+const DEFAULT_PROTECTED_PATH = "/company";
 const DEFAULT_PUBLIC_PATH = "/login";
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
