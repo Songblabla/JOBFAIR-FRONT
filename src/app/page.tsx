@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -20,28 +19,6 @@ interface HomeProps {
 }
 
 export default function Home({ user }: HomeProps) {
-  const [mounted, setMounted] = useState(false);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    setMounted(true);
-
-    const token = localStorage.getItem("token");
-    console.log("TOKEN", token);
-    if (token) {
-      router.push("/booking");
-    }
-  }, [router]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <div className="min-h-screen container mx-auto px-4 py-16 flex flex-col justify-between relative">
@@ -99,7 +76,7 @@ export default function Home({ user }: HomeProps) {
               </ul>
               <Link href="/companies" passHref>
                 <Button variant="outline" className="w-full group">
-                  View Companies
+                  Enroll Your Company
                   <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
                 </Button>
               </Link>

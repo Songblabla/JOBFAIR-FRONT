@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useTheme } from "next-themes"
-import { Moon, Sun, ArrowRight } from "lucide-react"
+import { Moon, Sun, ArrowRight, Home } from "lucide-react"
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -52,6 +52,10 @@ export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
     setMounted(true)
     setRandomHue(Math.floor(Math.random() * 360))
   }, [])
+
+  const handleHomeButton = () => {
+    router.push("/");
+  }
 
   const toggleTheme = () => {
     setTheme(theme === "light" ? "dark" : "light")
@@ -103,7 +107,7 @@ export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
     >
       <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen">
         <header className="text-center mb-16 relative">
-          <div className="relative">
+          <div className="relative flex">
             <Button
               variant="outline"
               size="icon"
@@ -116,6 +120,16 @@ export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
                 <Sun className="h-[1.2rem] w-[1.2rem]" />
               )}
               <span className="sr-only">Toggle theme</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleHomeButton}
+              className="absolute z-10"
+            >
+              <Home className='h-[1.2rem] w-[1.2rem]'/>
+              <span className='sr-only'>Home</span>
             </Button>
           </div>
 
