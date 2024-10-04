@@ -19,12 +19,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar"
-
 import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-  } from "@/components/ui/popover"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { CalendarIcon } from "@radix-ui/react-icons"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -42,14 +41,21 @@ interface Company {
 
 export default function Companies() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
   const [error, setError] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filterBusiness, setFilterBusiness] = useState('');
 
   useEffect(() => {
     fetchCompanies();
   }, []);
+
+  useEffect(() => {
+    filterAndSortCompanies();
+  }, [companies, sortOrder, filterBusiness]);
 
   const fetchCompanies = async () => {
     try {
@@ -59,6 +65,22 @@ export default function Companies() {
       console.error('Error fetching companies:', error);
       setError('Failed to fetch companies. Please try again.');
     }
+  };
+
+  const filterAndSortCompanies = () => {
+    const filtered = companies.filter(company =>
+      company.business.toLowerCase().includes(filterBusiness.toLowerCase())
+    );
+
+    filtered.sort((a, b) => {
+      if (sortOrder === 'asc') {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
+      }
+    });
+
+    setFilteredCompanies(filtered);
   };
 
   const handleCreateBooking = async () => {
@@ -81,10 +103,14 @@ export default function Companies() {
     }
   };
 
+  const toggleSortOrder = () => {
+    setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <div className="container mx-auto px-4 py-8 flex flex-col justify-between min-h-screen relative">
-        <header className="mb-8">
+        <header className="mb-4">
           <motion.h1
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -101,6 +127,19 @@ export default function Companies() {
           >
             Discover the companies and their information.
           </motion.p>
+          <div className="bg-background z-10 py-4">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <Input
+                    placeholder="Filter by business..."
+                    value={filterBusiness}
+                    onChange={(e) => setFilterBusiness(e.target.value)}
+                    className="max-w-xs"
+                    />
+                    <Button onClick={toggleSortOrder}>
+                    Sort by Name ({sortOrder === 'asc' ? 'A-Z' : 'Z-A'})
+                    </Button>
+                </div>
+            </div>
         </header>
 
         {error && (
@@ -115,98 +154,104 @@ export default function Companies() {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="flex flex-col gap-8 mb-16"
         >
-          {companies.map((company) => (
-            <Card key={company._id} className="w-full">
-              <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center">
-                {company.picture && (
-                  <div className="md:w-1/4 flex-shrink-0 mb-4 md:mb-0 md:mr-8 max-w-xs flex justify-center items-center">
-                    <Image
-                      src={company.picture}
-                      alt={`${company.name} logo`}
-                      className="h-auto object-contain"
-                      width={100}
-                      height={100}
-                    />
+          {filteredCompanies.length > 0 ? (
+            filteredCompanies.map((company) => (
+              <Card key={company._id} className="w-full dark:bg-neutral-800">
+                <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center">
+                  {company.picture && (
+                    <div className="md:w-1/4 flex-shrink-0 mb-4 md:mb-0 md:mr-8 max-w-xs flex justify-center items-center">
+                      <Image
+                        src={company.picture}
+                        alt={`${company.name} logo`}
+                        className="h-auto object-contain"
+                        width={100}
+                        height={100}
+                      />
+                    </div>
+                  )}
+                  <div className="w-full md:w-2/3">
+                    <h2 className="text-2xl font-semibold mb-4">{company.name}</h2>
+                    <p className="text-muted-foreground mb-2 dark:text-neutral-200">
+                      <strong>Business:</strong> {company.business}
+                    </p>
+                    <p className="text-muted-foreground mb-2 dark:text-neutral-200">
+                      <strong>Address:</strong> {company.address}, {company.postalcode}
+                    </p>
+                    <p className="text-muted-foreground mb-2 dark:text-neutral-200">
+                      <strong>Phone:</strong> {company.tel}
+                    </p>
                   </div>
-                )}
-                <div className="w-full md:w-2/3">
-                  <h2 className="text-2xl font-semibold mb-4">{company.name}</h2>
-                  <p className="text-muted-foreground mb-2">
-                    <strong>Business:</strong> {company.business}
-                  </p>
-                  <p className="text-muted-foreground mb-2">
-                    <strong>Address:</strong> {company.address}, {company.postalcode}
-                  </p>
-                  <p className="text-muted-foreground mb-2">
-                    <strong>Phone:</strong> {company.tel}
-                  </p>
-                </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      onClick={() => setSelectedCompany(company)}
-                    >
-                      Create Booking
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                      <DialogTitle>Create New Booking</DialogTitle>
-                      <DialogDescription>
-                        Create your booking here. Click save when you're done.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="company" className="text-right">
-                          Company
-                        </Label>
-                        <Input
-                          id="company"
-                          value={selectedCompany?.name || ''}
-                          className="col-span-3"
-                          readOnly
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 gap-4">
-                        <Label htmlFor="bookingDate" className="text-right">
-                          Booking Date
-                        </Label>
-                        <Popover>
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => setSelectedCompany(company)}
+                      >
+                        Create Booking
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                      <DialogHeader>
+                        <DialogTitle>Create New Booking</DialogTitle>
+                        <DialogDescription>
+                          Create your booking here. Click save when you&apos;re done.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                          <Label htmlFor="company" className="text-right">
+                            Company
+                          </Label>
+                          <Input
+                            id="company"
+                            value={selectedCompany?.name || ''}
+                            className="col-span-3"
+                            readOnly
+                          />
+                        </div>
+                        <div className="grid grid-cols-4 gap-4">
+                          <Label htmlFor="bookingDate" className="text-right">
+                            Booking Date
+                          </Label>
+                          <Popover>
                             <PopoverTrigger asChild>
-                                <Button
+                              <Button
                                 variant={"outline"}
                                 className={cn(
-                                    "w-[240px] justify-start text-left font-normal",
-                                    !selectedDate && "text-muted-foreground"
+                                  "w-[240px] justify-start text-left font-normal",
+                                  !selectedDate && "text-muted-foreground"
                                 )}
-                                >
+                              >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-                                </Button>
+                                {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                              </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={setSelectedDate}
-                                    initialFocus
-                                />
+                              <Calendar
+                                mode="single"
+                                selected={selectedDate}
+                                onSelect={setSelectedDate}
+                                initialFocus
+                              />
                             </PopoverContent>
-                        </Popover>
+                          </Popover>
+                        </div>
                       </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit" onClick={handleCreateBooking}>
-                        Confirm
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </CardContent>
-            </Card>
-          ))}
+                      <DialogFooter>
+                        <Button type="submit" onClick={handleCreateBooking}>
+                          Confirm
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="text-center text-muted-foreground">
+              No companies found matching your filter criteria.
+            </div>
+          )}
         </motion.div>
 
         <footer className="text-center text-muted-foreground text-sm mt-16">
