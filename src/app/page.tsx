@@ -74,7 +74,7 @@ export default function Home({ user }: HomeProps) {
                 <li>• View and manage interview bookings</li>
                 <li>• Connect with talented individuals</li>
               </ul>
-              <Link href="/companies" passHref>
+              <Link href="/enroll" passHref>
                 <Button variant="outline" className="w-full group">
                   Enroll Your Company
                   <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
