@@ -21,19 +21,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-interface User {
-    _id: string;
-    name: string;
-    email: string;
-    role: 'user' | 'admin';
-}
-
-interface LoginProps {
-    setUser: React.Dispatch<React.SetStateAction<User | null>>;
-    setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
+export default function LoginPage() {
   const [error, setError] = useState('');
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -64,7 +52,7 @@ export default function LoginPage({ setUser, setIsAdmin }: LoginProps) {
   const onSubmit = async (data: LoginFormData) => {
     setError('');
 
-    console.log(data);
+    // console.log(data);
 
     try {
       const response = await api.post('/auth/login', data);
