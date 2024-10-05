@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from 'next-themes'
 import Navbar from "@/components/nav/navbar";
 import ProtectedRoute from "@/components/protected/protectedRoute";
-
+import ToasterProvider from "@/providers/ToasterProvider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -22,6 +22,7 @@ export default function RootLayout({
           <ProtectedRoute>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
               <div className="relative flex min-h-screen flex-col">
+                <ToasterProvider />
                 <Navbar />
                 <div className="flex-1">{children}</div>
               </div>

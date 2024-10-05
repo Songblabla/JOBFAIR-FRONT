@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
+import { toast } from "react-hot-toast";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,24 @@ interface Company {
   picture: string;
 }
 
+interface NewCompany {
+    name: string;
+    address: string;
+    business: string;
+    province: string;
+    postalcode: string;
+    tel: string;
+    picture: string;
+}
+
+interface User {
+    _id: string;
+    name: string;
+    email: string;
+    tel: string;
+    role: 'user' | 'admin';
+}
+
 export default function Companies() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
@@ -46,11 +65,22 @@ export default function Companies() {
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreateCompanyDialogOpen, setIsCreateCompanyDialogOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filterBusiness, setFilterBusiness] = useState('');
-
+  const [userData, setUserData] = useState<User | null>(null);
+  const [newCompany, setNewCompany] = useState<NewCompany>({
+    name: '',
+    address: '',
+    business: '',
+    province: '',
+    postalcode: '',
+    tel: '',
+    picture: '',
+});
   useEffect(() => {
     fetchCompanies();
+    handleGetMe();
   }, []);
 
   useEffect(() => {
@@ -103,8 +133,49 @@ export default function Companies() {
     }
   };
 
+  const handleGetMe = async () => {
+    try {
+        const response = await api.get(`auth/me`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+      
+          if (response?.data) {
+            setUserData(response.data.data);
+          }
+    } catch (error) {
+      console.error('Error get me:', error);
+    }
+  };
+
   const toggleSortOrder = () => {
     setSortOrder(prevOrder => prevOrder === 'asc' ? 'desc' : 'asc');
+  };
+
+  const handleCreateCompany = async () => {
+    if (!newCompany) {
+        setError('Please fill in all fields.');
+        return;
+    }
+    try {
+      await api.post('companies', newCompany, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      fetchCompanies();
+      setIsCreateCompanyDialogOpen(false);
+      setNewCompany({
+        name: '',
+        address: '',
+        business: '',
+        province: '',
+        postalcode: '',
+        tel: '',
+        picture: '',
+      });
+    } catch (error) {
+        console.error('Error creating new company:', error);
+        //   setError('Failed to create company. Please try again.');
+        toast.error('Failed to create company. Please try again.');
+    }
   };
 
   return (
@@ -119,6 +190,7 @@ export default function Companies() {
           >
             Company Information
           </motion.h1>
+
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -126,17 +198,60 @@ export default function Companies() {
             className="text-xl text-muted-foreground"
           >
             Discover the companies and their information.
+            {userData?.role === 'admin' && (
+              <>
+                <Dialog open={isCreateCompanyDialogOpen} onOpenChange={setIsCreateCompanyDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="btn-primary mt-4 mx-4">Create Company</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Create New Company</DialogTitle>
+                      <DialogDescription>
+                        Fill in the details below to create a new company.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      {Object.keys(newCompany).map((key) => (
+                        <div className="grid grid-cols-4 items-center gap-4" key={key}>
+                          <Label htmlFor={key} className="text-right">
+                            {key.charAt(0).toUpperCase() + key.slice(1)}
+                          </Label>
+                          <Input
+                            id={key}
+                            value={newCompany[key as keyof typeof newCompany]}
+                            onChange={(e) =>
+                              setNewCompany((prev) => ({
+                                ...prev,
+                                [key]: e.target.value,
+                              }))
+                            }
+                            className="col-span-3"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" onClick={handleCreateCompany}>
+                        Confirm
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
           </motion.p>
+
           <div className="bg-background z-10 py-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <Input
-                    placeholder="Filter by business..."
-                    value={filterBusiness}
-                    onChange={(e) => setFilterBusiness(e.target.value)}
-                    className="max-w-xs"
+                        placeholder="Filter by business..."
+                        value={filterBusiness}
+                        onChange={(e) => setFilterBusiness(e.target.value)}
+                        className="max-w-xs"
                     />
                     <Button onClick={toggleSortOrder}>
-                    Sort by Name ({sortOrder === 'asc' ? 'A-Z' : 'Z-A'})
+                        Sort by Name ({sortOrder === 'asc' ? 'A-Z' : 'Z-A'})
                     </Button>
                 </div>
             </div>
