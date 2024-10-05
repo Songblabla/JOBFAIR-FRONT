@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Calendar, Clock, Building, Eye, EyeOff } from "lucide-react"
+import { Search, Calendar, Clock, Building, Eye, EyeOff, UserCircle } from "lucide-react"
 import { useTheme } from "next-themes"
 import {
   Carousel,
@@ -229,6 +229,10 @@ const ProfilePage = () => {
                         <div>
                           <h3 className="text-lg font-medium mb-2">{selectedBooking.company.name}</h3>
                           <div className="flex items-center mb-2">
+                            <UserCircle className="w-4 h-4 mr-2" />
+                            <p className="text-sm">User: {selectedBooking.user}</p>
+                          </div>
+                          <div className="flex items-center mb-2">
                             <Calendar className="w-4 h-4 mr-2" />
                             <p className="text-sm">Date: {formatDate(selectedBooking.bookingDate)}</p>
                           </div>
@@ -247,7 +251,7 @@ const ProfilePage = () => {
                 <div className="flex flex-col items-center justify-center h-64">
                   <Calendar className="w-16 h-16 text-gray-400 mb-4" />
                   <p className="text-xl font-semibold text-gray-500 mb-2">No Bookings Yet</p>
-                  <p className="text-sm text-gray-400 text-center mb-4">You haven't made any interview bookings. Start by exploring companies and scheduling your interviews!</p>
+                  <p className="text-sm text-gray-400 text-center mb-4">You haven&rsquo;t made any interview bookings. Start by exploring companies and scheduling your interviews!</p>
                   <Button onClick={handleCompanyRoute}>
                     <Building className="mr-2 h-4 w-4" />
                     Explore Companies

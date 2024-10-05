@@ -28,6 +28,17 @@ import {
 import { CalendarIcon } from "@radix-ui/react-icons"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { DropdownMenuCheckboxItemProps } from "@radix-ui/react-dropdown-menu"
+import {
+    DropdownMenu,
+    DropdownMenuItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+   
+type Checked = DropdownMenuCheckboxItemProps["checked"]
 
 interface Company {
   _id: string;
@@ -70,37 +81,42 @@ export default function Companies() {
   const [filterBusiness, setFilterBusiness] = useState('');
   const [userData, setUserData] = useState<User | null>(null);
   const [newCompany, setNewCompany] = useState<NewCompany>({
-    name: '',
-    address: '',
-    business: '',
-    province: '',
-    postalcode: '',
-    tel: '',
-    picture: '',
-});
-  useEffect(() => {
+        name: '',
+        address: '',
+        business: '',
+        province: '',
+        postalcode: '',
+        tel: '',
+        picture: '',
+    });
+const [businessOptions, setBusinessOptions] = useState<string[]>([]);
+
+useEffect(() => {
     fetchCompanies();
     handleGetMe();
-  }, []);
+}, []);
 
-  useEffect(() => {
+useEffect(() => {
     filterAndSortCompanies();
-  }, [companies, sortOrder, filterBusiness]);
+}, [companies, sortOrder, filterBusiness]);
 
   const fetchCompanies = async () => {
     try {
       const response = await api.get<{ data: Company[] }>('companies');
       setCompanies(response.data.data);
+
+      const uniqueBusinesses = Array.from(new Set(response.data.data.map(company => company.business)));
+      setBusinessOptions(uniqueBusinesses);
     } catch (error) {
       console.error('Error fetching companies:', error);
-      setError('Failed to fetch companies. Please try again.');
+      toast.error('Failed to fetch companies. Please try again.');
     }
   };
 
   const filterAndSortCompanies = () => {
     const filtered = companies.filter(company =>
-      company.business.toLowerCase().includes(filterBusiness.toLowerCase())
-    );
+        company.business.toLowerCase().includes(filterBusiness.toLowerCase())
+      );
 
     filtered.sort((a, b) => {
       if (sortOrder === 'asc') {
@@ -115,7 +131,7 @@ export default function Companies() {
 
   const handleCreateBooking = async () => {
     if (!selectedCompany || !selectedDate) {
-      setError('Please select both a company and a date.');
+      toast.error('Please select both a company and a date.');
       return;
     }
     try {
@@ -124,12 +140,13 @@ export default function Companies() {
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
-      setSelectedCompany(null);
-      setSelectedDate(undefined);
-      setIsDialogOpen(false);
+        setSelectedCompany(null);
+        setSelectedDate(undefined);
+        setIsDialogOpen(false);
+        toast.success('Booking created successfully!');
     } catch (error) {
       console.error('Error creating booking:', error);
-      setError('Failed to create booking. Please try again.');
+      toast.error('Failed to create booking. Please try again.');
     }
   };
 
@@ -173,7 +190,6 @@ export default function Companies() {
       });
     } catch (error) {
         console.error('Error creating new company:', error);
-        //   setError('Failed to create company. Please try again.');
         toast.error('Failed to create company. Please try again.');
     }
   };
@@ -245,11 +261,33 @@ export default function Companies() {
           <div className="bg-background z-10 py-4">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <Input
-                        placeholder="Filter by business..."
+                        placeholder="Filter by Business"
                         value={filterBusiness}
                         onChange={(e) => setFilterBusiness(e.target.value)}
-                        className="max-w-xs"
+                        className="w-25"
+                        disabled
                     />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button>Filter by Business</Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-56">
+                            <DropdownMenuLabel>Business</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {businessOptions.map((business) => (
+                                <DropdownMenuItem
+                                    key={business}
+                                    onClick={() => setFilterBusiness(business)}
+                                >
+                                    {business}
+                                </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setFilterBusiness('')}>
+                                Clear Filter
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button onClick={toggleSortOrder}>
                         Sort by Name ({sortOrder === 'asc' ? 'A-Z' : 'Z-A'})
                     </Button>
