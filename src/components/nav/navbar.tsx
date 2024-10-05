@@ -79,6 +79,10 @@ export default function Navbar() {
     router.push('/');
   };
 
+  const handleProfile = () => {
+    router.push("/profile");
+  };
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 max-w-screen-2xl items-center">
@@ -120,7 +124,7 @@ export default function Navbar() {
               user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center space-x-2 border-none">
+                    <Button variant="ghost" className="flex items-center space-x-2 border-0">
                       <UserCircle className="h-5 w-5" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -130,7 +134,7 @@ export default function Navbar() {
                       <p className="text-xs text-muted-foreground mt-1">{user.email}</p>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleProfile}>
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
