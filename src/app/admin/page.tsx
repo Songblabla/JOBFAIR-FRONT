@@ -213,7 +213,28 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-background text-foreground relative">
+      <aside 
+        className={`fixed top-1/2 -translate-y-1/2 bg-secondary rounded-lg shadow-lg transition-all duration-300 ease-in-out z-40 ${sidebarVisible ? 'w-64' : 'w-12'} overflow-hidden`}
+        onMouseEnter={() => setSidebarVisible(true)}
+        onMouseLeave={() => setSidebarVisible(false)}
+      >
+        <div className="p-2 space-y-4">
+          <div data-swapy-item="companies" className="flex items-center cursor-move p-2 hover:bg-primary hover:text-primary-foreground rounded transition-colors">
+            <Building className="h-6 w-6" />
+            {sidebarVisible && <span className="ml-2">Companies</span>}
+          </div>
+          <div data-swapy-item="bookings" className="flex items-center cursor-move p-2 hover:bg-primary hover:text-primary-foreground rounded transition-colors">
+            <Calendar className="h-6 w-6" />
+            {sidebarVisible && <span className="ml-2">Bookings</span>}
+          </div>
+          <div data-swapy-item="me" className="flex items-center cursor-move p-2 hover:bg-primary hover:text-primary-foreground rounded transition-colors">
+            <User className="h-6 w-6" />
+            {sidebarVisible && <span className="ml-2">User</span>}
+          </div>
+        </div>
+      </aside>
+      
       <main className="p-4">
         <header className="border-b pb-4 mb-4">
           <div className="container mx-auto flex justify-between items-center">
