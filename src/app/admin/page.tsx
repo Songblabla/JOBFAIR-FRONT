@@ -1,302 +1,245 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, UserPlus, Building, Calendar, ChevronRight } from 'lucide-react';
-import { useTheme } from "next-themes";
-import { Moon, Sun } from "lucide-react";
-import Link from "next/link";
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { createSwapy } from 'swapy';
+import { Settings, GripVertical, GripHorizontal, Building, Calendar, User } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import api from '@/lib/axios';
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'user' | 'admin';
-}
-
-interface Company {
-  _id: string;
-  name: string;
-  address: string;
-  business: string;
-  province: string;
-  postalcode: string;
-  tel: string;
-  picture: string;
-}
-
-interface Booking {
-  _id: string;
-  user: User;
-  company: Company;
-  bookingDate: string;
-}
-
-export default function AdminDashboard() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [newCompany, setNewCompany] = useState<Omit<Company, '_id'>>({ 
-    name: '', address: '', business: '', province: '', postalcode: '', tel: '', picture: '' 
+const AdminDashboard = () => {
+  const [layout, setLayout] = useState({
+    '1': { component: 'companies', width: 400, height: 400 },
+    '2': { component: 'bookings', width: 400, height: 400 },
+    '3': { component: 'me', width: 400, height: 400 },
+    '4': { component: null, width: 400, height: 400 }
   });
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [error, setError] = useState('');
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [bookings, setBookings] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [error, setError] = useState(null);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const dashboardRef = useRef(null);
 
-  const fetchUsers = useCallback(async () => {
+  const fetchData = useCallback(async (endpoint, setter) => {
     try {
-      const response = await axios.get<User[]>('/api/users', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setUsers(response.data);
+      const response = await api.get(endpoint);
+      setter(response.data.data);
     } catch (error) {
-      console.error('Error fetching users:', error);
-      setError('Failed to fetch users. Please try again.');
+      console.error(`Error fetching data from ${endpoint}:`, error);
+      setError(`Failed to fetch data from ${endpoint}. Please try again.`);
     }
   }, []);
 
-  const fetchCompanies = useCallback(async () => {
-    try {
-      const response = await axios.get<Company[]>('/api/companies');
-      setCompanies(response.data);
-    } catch (error) {
-      console.error('Error fetching companies:', error);
-      setError('Failed to fetch companies. Please try again.');
-    }
-  }, []);
-
-  const fetchBookings = useCallback(async () => {
-    try {
-      const response = await axios.get<Booking[]>('/api/bookings', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setBookings(response.data);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-      setError('Failed to fetch bookings. Please try again.');
-    }
-  }, []);
+  const fetchAllData = useCallback(async () => {
+    await Promise.all([
+      fetchData('/companies', setCompanies),
+      fetchData('/bookings', setBookings),
+      fetchData('/auth/me', setCurrentUser)
+    ]);
+  }, [fetchData]);
 
   useEffect(() => {
-    setMounted(true);
-    fetchUsers();
-    fetchCompanies();
-    fetchBookings();
-  }, [fetchUsers, fetchCompanies, fetchBookings]);
+    fetchAllData();
 
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
+    const swapy = createSwapy(dashboardRef.current, {
+      swapMode: 'swap',
+      animation: 'ease'
+    });
+
+    swapy.onSwap(({ data }) => {
+      setLayout(prevLayout => {
+        const newLayout = { ...prevLayout };
+        Object.keys(data.object).forEach(key => {
+          newLayout[key].component = data.object[key];
+        });
+        return newLayout;
+      });
+    });
+
+    return () => {
+      swapy.destroy();
+    };
+  }, [fetchAllData]);
+
+  const handleResize = (id, direction, delta) => {
+    setLayout(prevLayout => {
+      const newLayout = { ...prevLayout };
+      if (direction === 'horizontal') {
+        newLayout[id].width = Math.max(200, newLayout[id].width + delta);
+      } else if (direction === 'vertical') {
+        newLayout[id].height = Math.max(200, newLayout[id].height + delta);
+      }
+      return newLayout;
+    });
   };
 
-  const handleCreateCompany = async () => {
-    try {
-      await axios.post('/api/companies', newCompany, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setIsDialogOpen(false);
-      fetchCompanies();
-    } catch (error) {
-      console.error('Error creating company:', error);
-      setError('Failed to create company. Please try again.');
+  const CardWrapper = ({ id, children }) => {
+    const { width, height } = layout[id];
+    return (
+      <div style={{ width, height }} className="relative">
+        <Card className="h-full">
+          {children}
+          <div
+            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 cursor-ns-resize p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const startY = e.pageY;
+              const startHeight = height;
+              const handleMouseMove = (moveEvent) => {
+                const delta = moveEvent.pageY - startY;
+                handleResize(id, 'vertical', delta);
+              };
+              const handleMouseUp = () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+              };
+              document.addEventListener('mousemove', handleMouseMove);
+              document.addEventListener('mouseup', handleMouseUp);
+            }}
+          >
+            <GripHorizontal className="h-4 w-4" />
+          </div>
+          <div
+            className="absolute top-1/2 right-0 transform -translate-y-1/2 cursor-ew-resize p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              const startX = e.pageX;
+              const startWidth = width;
+              const handleMouseMove = (moveEvent) => {
+                const delta = moveEvent.pageX - startX;
+                handleResize(id, 'horizontal', delta);
+              };
+              const handleMouseUp = () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+              };
+              document.addEventListener('mousemove', handleMouseMove);
+              document.addEventListener('mouseup', handleMouseUp);
+            }}
+          >
+            <GripVertical className="h-4 w-4" />
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
+  const CompaniesCard = ({ id }) => (
+    <CardWrapper id={id}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Companies</CardTitle>
+        <Settings className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{companies.length}</div>
+        <p className="text-xs text-muted-foreground">Total registered companies</p>
+        <div className="h-[200px] mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={companies.map(company => ({ name: company.name, value: company.business.length }))}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </CardWrapper>
+  );
+
+  const BookingsCard = ({ id }) => (
+    <CardWrapper id={id}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Bookings</CardTitle>
+        <Settings className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{bookings.length}</div>
+        <p className="text-xs text-muted-foreground">Total bookings</p>
+        <div className="h-[200px] mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={bookings.map(booking => ({ name: new Date(booking.bookingDate).toLocaleDateString(), value: 1 }))}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#82ca9d" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </CardWrapper>
+  );
+
+  const CurrentUserCard = ({ id }) => (
+    <CardWrapper id={id}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">Current User</CardTitle>
+        <Settings className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        {currentUser && (
+          <div className="space-y-2">
+            <p className="text-2xl font-bold">{currentUser.name}</p>
+            <p className="text-sm text-muted-foreground">{currentUser.email}</p>
+            <p className="text-sm text-muted-foreground">Role: {currentUser.role}</p>
+            <p className="text-sm text-muted-foreground">Tel: {currentUser.tel}</p>
+            <p className="text-sm text-muted-foreground">Created: {new Date(currentUser.createdAt).toLocaleDateString()}</p>
+          </div>
+        )}
+      </CardContent>
+    </CardWrapper>
+  );
+
+  const getComponentByKey = (key, id) => {
+    switch(key) {
+      case 'companies': return <CompaniesCard id={id} />;
+      case 'bookings': return <BookingsCard id={id} />;
+      case 'me': return <CurrentUserCard id={id} />;
+      default: return null;
     }
   };
-
-  const handleDeleteCompany = async (id: string) => {
-    try {
-      await axios.delete(`/api/companies/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      fetchCompanies();
-    } catch (error) {
-      console.error('Error deleting company:', error);
-      setError('Failed to delete company. Please try again.');
-    }
-  };
-
-  if (!mounted) {
-    return null;
-  }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-      <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen relative">
-        <header className="text-center mb-16 relative">
-          <div className="relative">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleTheme}
-              className="absolute right-0 top-0 z-10"
-            >
-              {theme === "light" ? (
-                <Moon className="h-[1.2rem] w-[1.2rem]" />
-              ) : (
-                <Sun className="h-[1.2rem] w-[1.2rem]" />
-              )}
-              <span className="sr-only">Toggle theme</span>
-            </Button>
+    <div>
+      <main className="p-4">
+        <header className="border-b pb-4 mb-4">
+          <div className="container mx-auto flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+            <Input type="search" placeholder="Search..." className="max-w-sm" />
           </div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-6xl font-bold mb-4"
-          >
-            Admin Dashboard
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="text-xl text-muted-foreground"
-          >
-            Manage users, companies, and bookings.
-          </motion.p>
         </header>
-
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.8 }}
-        >
-          <Tabs defaultValue="users" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3 rounded-xl bg-muted p-1">
-              <TabsTrigger value="users" className="rounded-lg">Users</TabsTrigger>
-              <TabsTrigger value="companies" className="rounded-lg">Companies</TabsTrigger>
-              <TabsTrigger value="bookings" className="rounded-lg">Bookings</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="users">
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-2xl font-semibold mb-4">User Management</h2>
-                  <ul className="space-y-2 mb-6">
-                    {users.map(user => (
-                      <li key={user._id} className="flex justify-between items-center">
-                        <span>{user.name} - {user.email}</span>
-                        <Button variant="outline" size="sm" className="group">
-                          View Details
-                          <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="companies">
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-2xl font-semibold mb-4">Company Management</h2>
-                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button className="mb-4 group">
-                        <Plus className="mr-2 h-4 w-4" /> Add Company
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Company</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Input 
-                          placeholder="Company Name" 
-                          value={newCompany.name} 
-                          onChange={(e) => setNewCompany({...newCompany, name: e.target.value})}
-                        />
-                        <Input 
-                          placeholder="Address" 
-                          value={newCompany.address} 
-                          onChange={(e) => setNewCompany({...newCompany, address: e.target.value})}
-                        />
-                        <Input 
-                          placeholder="Business" 
-                          value={newCompany.business} 
-                          onChange={(e) => setNewCompany({...newCompany, business: e.target.value})}
-                        />
-                        <Input 
-                          placeholder="Province" 
-                          value={newCompany.province} 
-                          onChange={(e) => setNewCompany({...newCompany, province: e.target.value})}
-                        />
-                        <Input 
-                          placeholder="Postal Code" 
-                          value={newCompany.postalcode} 
-                          onChange={(e) => setNewCompany({...newCompany, postalcode: e.target.value})}
-                        />
-                        <Input 
-                          placeholder="Telephone" 
-                          value={newCompany.tel} 
-                          onChange={(e) => setNewCompany({...newCompany, tel: e.target.value})}
-                        />
-                        <Input 
-                          placeholder="Picture URL" 
-                          value={newCompany.picture} 
-                          onChange={(e) => setNewCompany({...newCompany, picture: e.target.value})}
-                        />
-                        <Button onClick={handleCreateCompany}>Create Company</Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  <ul className="space-y-2 mb-6">
-                    {companies.map(company => (
-                      <li key={company._id} className="flex justify-between items-center">
-                        <span>{company.name}</span>
-                        <div>
-                          <Button variant="outline" size="sm" className="mr-2 group">
-                            Edit
-                            <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
-                          </Button>
-                          <Button onClick={() => handleDeleteCompany(company._id)} variant="destructive" size="sm">Delete</Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="bookings">
-              <Card>
-                <CardContent className="p-6">
-                  <h2 className="text-2xl font-semibold mb-4">Booking Management</h2>
-                  <ul className="space-y-2 mb-6">
-                    {bookings.map(booking => (
-                      <li key={booking._id} className="flex justify-between items-center">
-                        <span>{booking.user.name} - {booking.company.name} - {new Date(booking.bookingDate).toLocaleDateString()}</span>
-                        <Button variant="outline" size="sm" className="group">
-                          View Details
-                          <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
-
-        <footer className="text-center text-muted-foreground text-sm mt-16">
-          © 2024 Job Fair. All rights reserved.
-        </footer>
-      </div>
+        <div ref={dashboardRef} className="grid grid-cols-2 gap-4">
+          {Object.entries(layout).map(([key, value]) => (
+            <div key={key} data-swapy-slot={key}>
+              {value.component && (
+                <div data-swapy-item={value.component}>
+                  {getComponentByKey(value.component, key)}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </main>
     </div>
   );
-}
+};
+
+export default AdminDashboard;
