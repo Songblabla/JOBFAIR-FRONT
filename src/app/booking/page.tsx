@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import toast from 'react-hot-toast';
 
 interface User {
   _id: string;
@@ -44,13 +45,15 @@ interface BookingsProps {
   isAdmin: boolean;
 }
 
-export default function Bookings({ user, isAdmin }: BookingsProps) {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+export default function Bookings() {
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [error, setError] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState('');
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
 
   useEffect(() => {
     fetchBookings();
@@ -59,77 +62,81 @@ export default function Bookings({ user, isAdmin }: BookingsProps) {
 
   const fetchBookings = async () => {
     try {
-      const response = await api.get<Booking[]>('bookings', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      setBookings(response.data);
+      const response = await api.get<{ data: Booking[] }>("bookings");
+      setBookings(response.data.data);
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      setError('Failed to fetch bookings. Please try again.');
+      toast.error('Failed to fetch bookings. Please try again.');
     }
   };
 
   const fetchCompanies = async () => {
     try {
-      const response = await api.get<Company[]>('companies');
-      setCompanies(response.data);
+      const response = await api.get<{ data: Company[] }>("companies");
+      setCompanies(response.data.data);
     } catch (error) {
       console.error('Error fetching companies:', error);
-      setError('Failed to fetch companies. Please try again.');
+      // setError('Failed to fetch companies. Please try again.');
     }
   };
 
   const handleCreateBooking = async () => {
     if (!selectedCompany || !selectedDate) {
-      setError('Please select both a company and a date.');
+      toast.error("Please select both a company and a date.");
       return;
     }
     try {
-      await api.post(`companies/${selectedCompany}/bookings`, {
-        bookingDate: selectedDate.toISOString()
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await api.post(
+        `companies/${selectedCompany._id}/bookings`,
+        {
+          bookingDate: new Date(selectedDate).toISOString(),
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
+      setSelectedCompany(null);
+      setSelectedDate(undefined);
       setIsDialogOpen(false);
       fetchBookings();
-      setSelectedCompany('');
-      setSelectedDate(undefined);
+      toast.success("Booking created successfully!");
     } catch (error) {
-      console.error('Error creating booking:', error);
-      setError('Failed to create booking. Please try again.');
+      console.error("Error creating booking:", error);
+      toast.error("Failed to create booking. Please try again.");
     }
   };
 
   const handleDeleteBooking = async (id: string) => {
     try {
-      await api.delete(`/api/bookings/${id}`, {
+      await api.delete(`bookings/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       fetchBookings();
     } catch (error) {
       console.error('Error deleting booking:', error);
-      setError('Failed to delete booking. Please try again.');
+      toast.error('Failed to delete booking. Please try again.');
     }
   };
 
   const handleUpdateBooking = async (id: string, newDate: Date) => {
     try {
-      await api.put(`/api/bookings/${id}`, {
+      await api.put(`bookings/${id}`, {
         bookingDate: newDate.toISOString()
       }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       fetchBookings();
+      toast.success('Booking updated successfully!');
     } catch (error) {
-      console.error('Error updating booking:', error);
-      setError('Failed to update booking. Please try again.');
+      console.error('Error updating booking:', error)
+      toast.error('Failed to update booking. Please try again.');
     }
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen relative">
-        <header className="text-center mb-16 relative">
+        <header className="mb-4 relative">
           <motion.h1
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,14 +174,14 @@ export default function Bookings({ user, isAdmin }: BookingsProps) {
                 <DialogTitle>Book New Interview</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <Select onValueChange={setSelectedCompany}>
+                <Select onValueChange={(value) => setSelectedCompany(companies.find(company => company._id === value) || null)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Company" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* {companies.map((company) => (
+                    {companies.map((company) => (
                       <SelectItem key={company._id} value={company._id}>{company.name}</SelectItem>
-                    ))} */}
+                    ))}
                   </SelectContent>
                 </Select>
                 <Popover>
@@ -219,7 +226,7 @@ export default function Bookings({ user, isAdmin }: BookingsProps) {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16"
         >
-          {/* {bookings.map((booking) => (
+          {bookings.map((booking) => (
             <Card key={booking._id}>
               <CardContent className="p-6">
                 <h2 className="text-2xl font-semibold mb-4">{booking.company.name}</h2>
@@ -253,7 +260,7 @@ export default function Bookings({ user, isAdmin }: BookingsProps) {
                 </Button>
               </CardContent>
             </Card>
-          ))} */}
+          ))}
         </motion.div>
 
         <footer className="text-center text-muted-foreground text-sm mt-16">

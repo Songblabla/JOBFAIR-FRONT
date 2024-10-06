@@ -68,6 +68,13 @@ interface User {
   role: "user" | "admin";
 }
 
+interface Booking {
+  _id: string;
+  user: User;
+  company: Company;
+  bookingDate: string;
+}
+
 export default function Companies() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filteredCompanies, setFilteredCompanies] = useState<Company[]>([]);
@@ -93,10 +100,12 @@ export default function Companies() {
   });
   const [businessOptions, setBusinessOptions] = useState<string[]>([]);
   const router = useRouter();
+  const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
     fetchCompanies();
     handleGetMe();
+    fetchBookings();
   }, []);
 
   useEffect(() => {
@@ -115,6 +124,16 @@ export default function Companies() {
     } catch (error) {
       console.error("Error fetching companies:", error);
       toast.error("Failed to fetch companies. Please try again.");
+    }
+  };
+
+  const fetchBookings = async () => {
+    try {
+      const response = await api.get<{ data: Booking[] }>("bookings");
+      setBookings(response.data.data);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+      toast.error('Failed to fetch bookings. Please try again.');
     }
   };
 
@@ -153,6 +172,7 @@ export default function Companies() {
       setSelectedDate(undefined);
       setIsDialogOpen(false);
       toast.success("Booking created successfully!");
+      router.push(`/bookings`);
     } catch (error) {
       console.error("Error creating booking:", error);
       toast.error("Failed to create booking. Please try again.");
@@ -209,7 +229,7 @@ export default function Companies() {
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-      <div className="container mx-auto px-4 py-8 flex flex-col justify-between min-h-screen relative">
+      <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen relative">
         <header className="mb-4">
           <motion.h1
             initial={{ opacity: 0, y: -50 }}
@@ -279,7 +299,7 @@ export default function Companies() {
             )}
           </motion.p>
 
-          <div className="bg-background z-10 py-4">
+          <div className="bg-background z-10 py-4 mt-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <Input
                 placeholder="Business"
@@ -360,17 +380,15 @@ export default function Companies() {
                   </div>
                   <div className="flex-grow">
                     <Button
-                      variant="outline"
                       className="mb-4 md:mr-2 sm:mr-2"
                       onClick={() => handleCompanyIdRoute({ id: company._id })}
                     >
                       View Company
                     </Button>
-
+                    {bookings.length < 3  && (
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                       <DialogTrigger asChild>
                         <Button
-                          variant="outline"
                           onClick={() => setSelectedCompany(company)}
                         >
                           Create Booking
@@ -438,6 +456,7 @@ export default function Companies() {
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
+                    )}
                   </div>
                 </CardContent>
               </Card>
