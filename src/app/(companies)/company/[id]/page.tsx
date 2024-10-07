@@ -190,7 +190,9 @@ const CompanyPage = ({ params }: { params: { id: string } }) => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             {editedCompany &&
-              Object.keys(editedCompany).map((key) => (
+              Object.keys(editedCompany)
+              .filter((key) => key !== 'id' && key !== '__v' && key !== '_id')
+              .map((key) => (
                 <div className="grid grid-cols-4 items-center gap-4" key={key}>
                   <Label htmlFor={key} className="text-right">
                     {key.charAt(0).toUpperCase() + key.slice(1)}
