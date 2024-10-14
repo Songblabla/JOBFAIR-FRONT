@@ -46,17 +46,20 @@ jobs:
               cd ~/Documents/SW-FRONTEND
               if [ ! -d "JOBFAIR-FRONT" ]; then
                 gh repo clone NAPHATAR/JOBFAIR-FRONT
+                cd JOBFAIR-FRONT
               else
                 cd JOBFAIR-FRONT
                 git pull origin main
               fi
-              cd JOBFAIR-FRONT
+
               echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}" > .env
+
               docker image prune -af
               docker build -t jobfair-front .
               docker stop jobfair-frontend || true
               docker rm jobfair-frontend || true
               docker run -itd -p 3051:3051 --name jobfair-frontend jobfair-front
+              
               cd ../
               rm -rf JOBFAIR-FRONT
             EOF
