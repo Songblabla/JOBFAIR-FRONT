@@ -2,7 +2,7 @@ interface Booking {
     _id?: string;
     bookingDate: string;
     user: string; // This is the user ID
-    company: string; // This is the company ID
+    company: any
     createdAt?: string;
   }
 

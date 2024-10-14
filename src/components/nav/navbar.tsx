@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { UserCircle, Menu, User, LogOut } from 'lucide-react';
+import { UserCircle, Menu, User, LogOut, LayoutDashboard } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -20,14 +20,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from '../theme/mode';
 import api from '@/lib/axios'; 
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  tel: string;
-  role: string;
-}
 
 const navItems = [
   { name: 'Home', path: '/' },
@@ -81,6 +73,10 @@ export default function Navbar() {
 
   const handleProfile = () => {
     router.push("/profile");
+  };
+
+  const handleAdminDashboard = () => {
+    router.push("/admin");
   };
 
   return (
@@ -138,6 +134,12 @@ export default function Navbar() {
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
                     </DropdownMenuItem>
+                    {user.role === 'admin' && (
+                      <DropdownMenuItem onClick={handleAdminDashboard}>
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        <span>Admin</span>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>

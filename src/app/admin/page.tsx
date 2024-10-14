@@ -1,264 +1,534 @@
 "use client"
 
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { createSwapy } from 'swapy';
-import { Settings, GripVertical, GripHorizontal, Building, Calendar, User } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
-import api from '@/lib/axios';
+  User,
+  Building2,
+  CalendarDays,
+  BarChart3,
+  Search,
+  Plus,
+  Briefcase,
+  Clock,
+  AlertCircle,
+  ChevronsLeftIcon,
+  MoreVertical,
+  Edit,
+  Trash,
+  Eye,
+  Settings,
+} from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
+import toast, { Toaster } from 'react-hot-toast';
+import api from "@/lib/axios";
+
+interface Company {
+  _id: string;
+  name: string;
+  address: string;
+  business: string;
+  province: string;
+  postalcode: string;
+  tel: string;
+  picture: string;
+}
+
+interface User {
+  _id: string;
+  name: string;
+  email: string;
+  tel: string;
+  role: "user" | "admin";
+}
+
+interface Booking {
+  _id: string;
+  bookingDate: string;
+  user: string;
+  company: {
+    _id: string;
+    name: string;
+  };
+  createdAt: string;
+}
 
 const AdminDashboard = () => {
-  const [layout, setLayout] = useState({
-    '1': { component: 'companies', width: 400, height: 400 },
-    '2': { component: 'bookings', width: 400, height: 400 },
-    '3': { component: 'me', width: 400, height: 400 },
-    '4': { component: null, width: 400, height: 400 }
+  const [user, setUser] = useState<User | null>(null);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companySearchTerm, setCompanySearchTerm] = useState("");
+  const [bookingSearchTerm, setBookingSearchTerm] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateCompanyDialogOpen, setIsCreateCompanyDialogOpen] = useState(false);
+  const [newCompany, setNewCompany] = useState<Omit<Company, '_id'>>({
+    name: '',
+    address: '',
+    business: '',
+    province: '',
+    postalcode: '',
+    tel: '',
+    picture: '',
   });
-  const [companies, setCompanies] = useState([]);
-  const [bookings, setBookings] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [error, setError] = useState(null);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
-  const dashboardRef = useRef(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
+  const [confirmationInput, setConfirmationInput] = useState('');
 
-  const fetchData = useCallback(async (endpoint, setter) => {
-    try {
-      const response = await api.get(endpoint);
-      setter(response.data.data);
-    } catch (error) {
-      console.error(`Error fetching data from ${endpoint}:`, error);
-      setError(`Failed to fetch data from ${endpoint}. Please try again.`);
-    }
-  }, []);
-
-  const fetchAllData = useCallback(async () => {
-    await Promise.all([
-      fetchData('/companies', setCompanies),
-      fetchData('/bookings', setBookings),
-      fetchData('/auth/me', setCurrentUser)
-    ]);
-  }, [fetchData]);
+  const router = useRouter();
 
   useEffect(() => {
-    fetchAllData();
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [userResponse, bookingsResponse, companiesResponse] = await Promise.all([
+          api.get("/auth/me"),
+          api.get("/bookings"),
+          api.get("/companies")
+        ]);
 
-    const swapy = createSwapy(dashboardRef.current, {
-      swapMode: 'swap',
-      animation: 'ease'
-    });
-
-    swapy.onSwap(({ data }) => {
-      setLayout(prevLayout => {
-        const newLayout = { ...prevLayout };
-        Object.keys(data.object).forEach(key => {
-          newLayout[key].component = data.object[key];
-        });
-        return newLayout;
-      });
-    });
-
-    return () => {
-      swapy.destroy();
-    };
-  }, [fetchAllData]);
-
-  const handleResize = (id, direction, delta) => {
-    setLayout(prevLayout => {
-      const newLayout = { ...prevLayout };
-      if (direction === 'horizontal') {
-        newLayout[id].width = Math.max(200, newLayout[id].width + delta);
-      } else if (direction === 'vertical') {
-        newLayout[id].height = Math.max(200, newLayout[id].height + delta);
+        setUser(userResponse.data.data);
+        setBookings(bookingsResponse.data.data || []);
+        setCompanies(companiesResponse.data.data || []);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError("An error occurred while fetching data. Please try again later.");
+      } finally {
+        setLoading(false);
       }
-      return newLayout;
-    });
+    };
+
+    fetchData();
+  }, []);
+
+  const filteredCompanies = companies.filter(company => {
+    const name = (company.name || '').toLowerCase();
+    const business = (company.business || '').toLowerCase();
+    const searchTerm = companySearchTerm.toLowerCase();
+    return name.includes(searchTerm) || business.includes(searchTerm);
+  });
+
+  const filteredBookings = bookings.filter(booking => {
+    const user = (booking.user || '').toLowerCase();
+    const companyName = (booking.company?.name || '').toLowerCase();
+    const searchTerm = bookingSearchTerm.toLowerCase();
+    return user.includes(searchTerm) || companyName.includes(searchTerm);
+  });
+
+  const handleViewCompany = (id: string) => {
+    router.push(`/company/${id}`);
   };
 
-  const CardWrapper = ({ id, children }) => {
-    const { width, height } = layout[id];
-    return (
-      <div style={{ width, height }} className="relative">
-        <Card className="h-full">
-          {children}
-          <div
-            className="absolute bottom-0 left-1/2 transform -translate-x-1/2 cursor-ns-resize p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const startY = e.pageY;
-              const startHeight = height;
-              const handleMouseMove = (moveEvent) => {
-                const delta = moveEvent.pageY - startY;
-                handleResize(id, 'vertical', delta);
-              };
-              const handleMouseUp = () => {
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
-              };
-              document.addEventListener('mousemove', handleMouseMove);
-              document.addEventListener('mouseup', handleMouseUp);
-            }}
-          >
-            <GripHorizontal className="h-4 w-4" />
-          </div>
-          <div
-            className="absolute top-1/2 right-0 transform -translate-y-1/2 cursor-ew-resize p-1 hover:bg-gray-200 dark:hover:bg-gray-700"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const startX = e.pageX;
-              const startWidth = width;
-              const handleMouseMove = (moveEvent) => {
-                const delta = moveEvent.pageX - startX;
-                handleResize(id, 'horizontal', delta);
-              };
-              const handleMouseUp = () => {
-                document.removeEventListener('mousemove', handleMouseMove);
-                document.removeEventListener('mouseup', handleMouseUp);
-              };
-              document.addEventListener('mousemove', handleMouseMove);
-              document.addEventListener('mouseup', handleMouseUp);
-            }}
-          >
-            <GripVertical className="h-4 w-4" />
-          </div>
-        </Card>
-      </div>
-    );
+  const handleEditCompany = (company: Company) => {
+    setEditingCompany(company);
+    setIsEditDialogOpen(true);
   };
 
-  const CompaniesCard = ({ id }) => (
-    <CardWrapper id={id}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Companies</CardTitle>
-        <Settings className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{companies.length}</div>
-        <p className="text-xs text-muted-foreground">Total registered companies</p>
-        <div className="h-[200px] mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={companies.map(company => ({ name: company.name, value: company.business.length }))}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#8884d8" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </CardWrapper>
-  );
-
-  const BookingsCard = ({ id }) => (
-    <CardWrapper id={id}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Bookings</CardTitle>
-        <Settings className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{bookings.length}</div>
-        <p className="text-xs text-muted-foreground">Total bookings</p>
-        <div className="h-[200px] mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={bookings.map(booking => ({ name: new Date(booking.bookingDate).toLocaleDateString(), value: 1 }))}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
-    </CardWrapper>
-  );
-
-  const CurrentUserCard = ({ id }) => (
-    <CardWrapper id={id}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Current User</CardTitle>
-        <Settings className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        {currentUser && (
-          <div className="space-y-2">
-            <p className="text-2xl font-bold">{currentUser.name}</p>
-            <p className="text-sm text-muted-foreground">{currentUser.email}</p>
-            <p className="text-sm text-muted-foreground">Role: {currentUser.role}</p>
-            <p className="text-sm text-muted-foreground">Tel: {currentUser.tel}</p>
-            <p className="text-sm text-muted-foreground">Created: {new Date(currentUser.createdAt).toLocaleDateString()}</p>
-          </div>
-        )}
-      </CardContent>
-    </CardWrapper>
-  );
-
-  const getComponentByKey = (key, id) => {
-    switch(key) {
-      case 'companies': return <CompaniesCard id={id} />;
-      case 'bookings': return <BookingsCard id={id} />;
-      case 'me': return <CurrentUserCard id={id} />;
-      default: return null;
+  const handleCreateCompany = async () => {
+    try {
+      // console.log(newCompany);
+      const response = await api.post('companies', newCompany, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setCompanies([...companies, response.data]);
+      toast.success("Company created successfully!");
+      setIsCreateCompanyDialogOpen(false);
+      setNewCompany({
+        name: '',
+        address: '',
+        business: '',
+        province: '',
+        postalcode: '',
+        tel: '',
+        picture: '',
+      });
+    } catch (error) {
+      console.error("Error creating new company:", error);
+      toast.error("Failed to create company. Please try again.");
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background text-foreground relative">
-      <aside 
-        className={`fixed top-1/2 -translate-y-1/2 bg-secondary rounded-lg shadow-lg transition-all duration-300 ease-in-out z-40 ${sidebarVisible ? 'w-64' : 'w-12'} overflow-hidden`}
-        onMouseEnter={() => setSidebarVisible(true)}
-        onMouseLeave={() => setSidebarVisible(false)}
-      >
-        <div className="p-2 space-y-4">
-          <div data-swapy-item="companies" className="flex items-center cursor-move p-2 hover:bg-primary hover:text-primary-foreground rounded transition-colors">
-            <Building className="h-6 w-6" />
-            {sidebarVisible && <span className="ml-2">Companies</span>}
-          </div>
-          <div data-swapy-item="bookings" className="flex items-center cursor-move p-2 hover:bg-primary hover:text-primary-foreground rounded transition-colors">
-            <Calendar className="h-6 w-6" />
-            {sidebarVisible && <span className="ml-2">Bookings</span>}
-          </div>
-          <div data-swapy-item="me" className="flex items-center cursor-move p-2 hover:bg-primary hover:text-primary-foreground rounded transition-colors">
-            <User className="h-6 w-6" />
-            {sidebarVisible && <span className="ml-2">User</span>}
-          </div>
-        </div>
-      </aside>
+  const handleUpdateCompany = async () => {
+    if (!editingCompany) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+    try {
+      const response = await api.put(`companies/${editingCompany._id}`, editingCompany, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setCompanies(companies.map(c => c._id === editingCompany._id ? response.data : c));
+      toast.success("Company updated successfully!");
+      setIsEditDialogOpen(false);
+      setLoading(true);
       
-      <main className="p-4">
-        <header className="border-b pb-4 mb-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-            <Input type="search" placeholder="Search..." className="max-w-sm" />
-          </div>
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); 
+    } catch (error) {
+      console.error("Error updating company:", error);
+      toast.error("Failed to update company. Please try again.");
+    }
+  };
+
+  const handleDeleteCompany = async (company: Company) => {
+    setCompanyToDelete(company);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const processDeleteCompany = async () => {
+    if (!companyToDelete || confirmationInput !== companyToDelete.name) {
+      toast.error("Company name doesn't match. Deletion cancelled.");
+      return;
+    }
+  
+    try {
+      await api.delete(`companies/${companyToDelete._id}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      setCompanies(companies.filter(c => c._id !== companyToDelete._id));
+      toast.success("Company deleted successfully!");
+      setIsDeleteDialogOpen(false);
+      setCompanyToDelete(null);
+      setConfirmationInput('');
+      setLoading(true);
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000); 
+    } catch (error) {
+      console.error("Error deleting company:", error);
+      toast.error("Failed to delete company. Please try again.");
+    }
+  };
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (!user) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>Unable to fetch user data. Please try logging in again.</AlertDescription>
+      </Alert>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      <Toaster position="top-right" />
+      <div className="container mx-auto p-6">
+        <header className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+          <p className="text-lg text-gray-600 dark:text-gray-400">
+            Welcome, {user.name}
+          </p>
         </header>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        <div ref={dashboardRef} className="grid grid-cols-2 gap-4">
-          {Object.entries(layout).map(([key, value]) => (
-            <div key={key} data-swapy-slot={key}>
-              {value.component && (
-                <div data-swapy-item={value.component}>
-                  {getComponentByKey(value.component, key)}
-                </div>
-              )}
-            </div>
-          ))}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Companies</CardTitle>
+              <Building2 className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{companies.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Bookings</CardTitle>
+              <CalendarDays className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{bookings.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Analytics</CardTitle>
+              <BarChart3 className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">Coming Soon</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Role</CardTitle>
+              <User className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{user.role}</div>
+            </CardContent>
+          </Card>
         </div>
-      </main>
+
+        <Tabs defaultValue="companies" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="companies">Companies</TabsTrigger>
+            <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="companies" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Company Management</CardTitle>
+                <CardDescription>Oversee and manage registered companies</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="relative flex-1 mr-4">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search companies..."
+                      className="pl-8 w-full"
+                      value={companySearchTerm}
+                      onChange={(e) => setCompanySearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Button onClick={() => setIsCreateCompanyDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Company
+                  </Button>
+                </div>
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Business</TableHead>
+                        <TableHead>Province</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCompanies.map((company) => (
+                        <TableRow key={company._id}>
+                          <TableCell className="font-medium">{company.name}</TableCell>
+                          <TableCell>{company.business}</TableCell>
+                          <TableCell>{company.province}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <span className="sr-only">Open menu</span>
+                                  <Settings className="h-4 w-4"/> 
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleViewCompany(company._id)}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  <span>View</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditCompany(company)}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  <span>Edit</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDeleteCompany(company)}>
+                                  <Trash className="mr-2 h-4 w-4" />
+                                  <span>Delete</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bookings" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Booking Management</CardTitle>
+                <CardDescription>Overview of all interview bookings</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="relative flex-1 mr-4">
+                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <Input
+                      type="text"
+                      placeholder="Search bookings..."
+                      className="pl-8 w-full"
+                      value={bookingSearchTerm}
+                      onChange={(e) => setBookingSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" /> Add Booking
+                  </Button>
+                </div>
+                <ScrollArea className="h-[400px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>User</TableHead>
+                        <TableHead>Company</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredBookings.map((booking) => (
+                        <TableRow key={booking._id}>
+                          <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
+                          <TableCell>{booking.user}</TableCell>
+                          <TableCell>{booking.company.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">Scheduled</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Company</DialogTitle>
+            <DialogDescription>
+              Update the details below to modify the company.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {editingCompany && Object.keys(editingCompany).map((key) => (
+              key !== '_id' && key !== "__v" && key !== "id" && (
+                <div className="grid grid-cols-4 items-center gap-4" key={key}>
+                  <Label htmlFor={key} className="text-right">
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </Label>
+                  <Input
+                    id={key}
+                    value={editingCompany[key as keyof Company] ?? ''}
+                    onChange={(e) =>
+                      setEditingCompany((prev) => ({
+                        ...(prev as Company),
+                        [key]: e.target.value,
+                      }))
+                    }
+                    className="col-span-3"
+                  />
+                </div>
+              )
+            ))}
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleUpdateCompany}>
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isCreateCompanyDialogOpen} onOpenChange={setIsCreateCompanyDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create New Company</DialogTitle>
+            <DialogDescription>
+              Fill in the details below to create a new company.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            {Object.keys(newCompany).map((key) => (
+              <div className="grid grid-cols-4 items-center gap-4" key={key}>
+                <Label htmlFor={key} className="text-right">
+                  {key.charAt(0).toUpperCase() + key.slice(1)}
+                </Label>
+                <Input
+                  id={key}
+                  value={newCompany[key as keyof typeof newCompany]}
+                  onChange={(e) =>
+                    setNewCompany((prev) => ({
+                      ...prev,
+                      [key]: e.target.value,
+                    }))
+                  }
+                  className="col-span-3"
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button type="submit" onClick={handleCreateCompany}>
+              Create Company
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Company Deletion</DialogTitle>
+            <DialogDescription>
+              This is a destructive action and cannot be undone. To confirm deletion, please type the company name: <strong>{companyToDelete?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="companyName" className="text-right">
+                Company Name
+              </Label>
+              <Input
+                id="companyName"
+                value={confirmationInput}
+                onChange={(e) => setConfirmationInput(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={processDeleteCompany}
+              disabled={confirmationInput !== companyToDelete?.name}
+            >
+              Delete Company
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

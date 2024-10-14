@@ -8,3 +8,12 @@ interface Company {
     tel?: string;
     picture: string;
   }
+
+interface CompanyBooking {
+  _id?: string;
+  address: string;
+  name: string;
+  tel: string;
+}
+
+interface CompanyUpdate extends Pick<Company, 'name' | 'address' | 'business' | 'province' | 'postalcode' | 'tel' | 'picture'> {}

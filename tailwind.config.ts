@@ -10,7 +10,7 @@ const config: Config = {
   theme: {
   	extend: {
 		fontFamily: {
-			sans: ["sf-pro"]
+			sans: ["SF-Pro"]
 		},
   		colors: {
   			background: 'hsl(var(--background))',
