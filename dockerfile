@@ -10,8 +10,8 @@ COPY . .
 
 # RUN yarn build
 
-EXPOSE 3050
+EXPOSE 3051
 
-ENV PORT=3050
+ENV PORT=3051
 
 CMD ["yarn", "dev"]

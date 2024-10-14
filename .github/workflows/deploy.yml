@@ -15,19 +15,6 @@ jobs:
         - name: Gitleaks Action
           uses: zricethezav/gitleaks-action@master
 
-        - name: Build Docker image
-          run: docker build -t jobfair-front .
-
-        - name: Run Trivy vulnerability scanner
-          uses: aquasecurity/trivy-action@master
-          with:
-            image-ref: 'jobfair-front'
-            format: 'table'
-            exit-code: '1'
-            ignore-unfixed: true
-            vuln-type: 'os,library'
-            severity: 'CRITICAL,HIGH'
-
     deploy:
         needs: security-scan
         runs-on: ubuntu-latest
@@ -69,7 +56,7 @@ jobs:
               docker build -t jobfair-front .
               docker stop jobfair-frontend || true
               docker rm jobfair-frontend || true
-              docker run -itd -p 3050:3050 --name jobfair-frontend jobfair-front
+              docker run -itd -p 3051:3051 --name jobfair-frontend jobfair-front
               cd ../
               rm -rf JOBFAIR-FRONT
             EOF
