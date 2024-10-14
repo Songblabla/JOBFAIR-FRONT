@@ -112,6 +112,7 @@ export default function Bookings() {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       fetchBookings();
+      toast.success('Booking deleted successfully!');
     } catch (error) {
       console.error('Error deleting booking:', error);
       toast.error('Failed to delete booking. Please try again.');
