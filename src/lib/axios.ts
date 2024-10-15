@@ -7,7 +7,7 @@ const api = axios.create({
   },
 });
 
-// console.log("Backend URL", process.env.NEXT_PUBLIC_BACKEND_URL);
+console.log("Backend URL", process.env.NEXT_PUBLIC_BACKEND_URL);
 
 api.interceptors.request.use((config) => {
   // console.log(config);
