@@ -60,6 +60,6 @@ jobs:
               docker rm jobfair-frontend || true
               docker run -itd -p 3051:3051 --name jobfair-frontend jobfair-front
               
-              cd ../
-              rm -rf JOBFAIR-FRONT
+              # cd ../
+              # rm -rf JOBFAIR-FRONT
             EOF
