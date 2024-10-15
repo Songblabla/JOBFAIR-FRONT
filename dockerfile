@@ -2,16 +2,14 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
-RUN yarn install
+RUN npm install -g pnpm
+
+RUN pnpm install
 
 COPY . .
 
-# RUN yarn build
+EXPOSE 3000
 
-EXPOSE 3051
-
-ENV PORT=3051
-
-CMD ["yarn", "dev"]
+CMD ["pnpm", "dev"]
