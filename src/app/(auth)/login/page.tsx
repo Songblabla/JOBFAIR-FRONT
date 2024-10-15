@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/axios';
+import Footer from '@/components/footer/footer';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -23,10 +24,9 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  const [randomHue, setRandomHue] = useState(0);
 
   const { 
     register, 
@@ -37,27 +37,26 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    setMounted(true)
-    setRandomHue(Math.floor(Math.random() * 360))
-  }, [])
+    setMounted(true);
+  }, []);
 
-  const handleHomeButton = () => {
-    router.push("/");
-  }
+  const gradientStyle = useMemo(() => {
+    const hue1 = Math.floor(Math.random() * 360);
+    const hue2 = (hue1 + 30) % 360;
+    const hue3 = (hue1 + 60) % 360;
+    return {
+      light: `linear-gradient(to bottom right, hsl(${hue1}, 60%, 90%), hsl(${hue2}, 55%, 92%), hsl(${hue3}, 50%, 91%))`,
+      dark: `linear-gradient(to bottom left, hsl(${hue1}, 50%, 35%), hsl(${hue2}, 45%, 40%), hsl(${hue3}, 40%, 45%))`,
+    };
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light")
-  }
+  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
 
   const onSubmit = async (data: LoginFormData) => {
     setError('');
-
-    // console.log(data);
-
     try {
       const response = await api.post('/auth/login', data);
-      console.log(response);
-      if (response.status === 200) { // Swagger said 201 ??
+      if (response.status === 200) {
         const userData = response.data;
         localStorage.setItem('token', userData.token);
         router.push('/');
@@ -70,37 +69,34 @@ export default function LoginPage() {
     }
   };
 
-  if (!mounted) {
-    return null
-  }
+  if (!mounted) return null;
 
-  const gradientStyle = {
-    backgroundImage: `linear-gradient(to bottom right, 
-        hsl(${randomHue}, 60%, 90%), 
-        hsl(${(randomHue + 30) % 360}, 55%, 92%), 
-        hsl(${(randomHue + 60) % 360}, 50%, 91%))`
-  }
-
-  const darkGradientStyle = {
-    backgroundImage: `linear-gradient(to bottom left, 
-        hsl(${randomHue}, 50%, 35%), 
-        hsl(${(randomHue + 30) % 360}, 45%, 40%), 
-        hsl(${(randomHue + 60) % 360}, 40%, 45%))`
-  }  
+  const backgroundStyle = theme 
+    ? { backgroundImage: theme === 'dark' ? gradientStyle.dark : gradientStyle.light }
+    : { backgroundColor: 'white' };
 
   return (
     <div 
       className="min-h-screen text-gray-800 dark:text-gray-100 transition-colors duration-300"
-      style={theme === 'light' ? gradientStyle : darkGradientStyle}
+      style={backgroundStyle}
     >
       <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen">
         <header className="text-center mb-16 relative">
-          <div className="relative flex">
+          <div className="relative flex justify-between">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.push("/")}
+              className="z-10"
+            >
+              <Home className='h-[1.2rem] w-[1.2rem]'/>
+              <span className='sr-only'>Home</span>
+            </Button>
             <Button
               variant="outline"
               size="icon"
               onClick={toggleTheme}
-              className="absolute right-0 top-0 z-10"
+              className="z-10"
             >
               {theme === "light" ? (
                 <Moon className="h-[1.2rem] w-[1.2rem]" />
@@ -108,16 +104,6 @@ export default function LoginPage() {
                 <Sun className="h-[1.2rem] w-[1.2rem]" />
               )}
               <span className="sr-only">Toggle theme</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleHomeButton}
-              className="absolute z-10"
-            >
-              <Home className='h-[1.2rem] w-[1.2rem]'/>
-              <span className='sr-only'>Home</span>
             </Button>
           </div>
 
@@ -145,35 +131,26 @@ export default function LoginPage() {
           transition={{ delay: 0.6, duration: 0.8 }}
           className="max-w-md mx-auto w-full"
         >
-          <Card className="bg-white dark:bg-gray-900 backdrop-blur-sm shadow-lg">
+          <Card className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-lg">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    {...register('email')}
-                    className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
-                  />
-                  {errors.email && (
-                    <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    {...register('password')}
-                    className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600"
-                  />
-                  {errors.password && (
-                    <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>
-                  )}
-                </div>
+                {['email', 'password'].map((field) => (
+                  <div key={field}>
+                    <Input
+                      type={field === 'password' ? 'password' : 'text'}
+                      placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                      {...register(field as keyof LoginFormData)}
+                      className="w-full bg-white/50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-600"
+                    />
+                    {errors[field as keyof LoginFormData] && (
+                      <p className="text-red-500 text-sm mt-1">{errors[field as keyof LoginFormData]?.message}</p>
+                    )}
+                  </div>
+                ))}
                 {error && <p className="text-red-500 text-sm">{error}</p>}
                 <Button 
                   type="submit" 
-                  className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800"
+                  className="w-full bg-gray-800 hover:bg-gray-900 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-gray-800 group"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Signing In...' : 'Sign In'}
@@ -190,9 +167,7 @@ export default function LoginPage() {
           </Card>
         </motion.div>
 
-        <footer className="text-center text-gray-600 dark:text-gray-200 text-sm mt-16">
-          © 2024 Job Fair. All rights reserved.
-        </footer>
+        <Footer />
       </div>
     </div>
   );

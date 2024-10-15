@@ -68,15 +68,15 @@ export default function Home({ user }: HomeProps) {
 
           <Card>
             <CardContent className="p-6">
-              <h2 className="text-2xl font-semibold mb-4">For Companies</h2>
+              <h2 className="text-2xl font-semibold mb-4">Join as JobFair Admin</h2>
               <ul className="space-y-2 mb-6 text-muted-foreground">
-                <li>• Create and manage your company profile</li>
-                <li>• View and manage interview bookings</li>
-                <li>• Connect with talented individuals</li>
+                <li>• Create and manage job fairs</li>
+                <li>• View and manage company registrations</li>
+                <li>• Oversee the entire job fair process</li>
               </ul>
               <Link href="/enroll" passHref>
                 <Button variant="outline" className="w-full group">
-                  Enroll Your Company
+                  Become a JobFair Admin
                   <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
                 </Button>
               </Link>

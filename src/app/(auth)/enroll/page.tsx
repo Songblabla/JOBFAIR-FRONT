@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,12 +13,12 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import api from '@/lib/axios';
+import Footer from '@/components/footer/footer';
 
 const enrollSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
   tel: z.string().regex(/^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/, 'Invalid phone number'),
-  companyName: z.string().min(2, 'Company name must be at least 2 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
@@ -28,26 +28,11 @@ const enrollSchema = z.object({
 
 type EnrollFormData = z.infer<typeof enrollSchema>;
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  tel: string;
-  role: 'user' | 'admin';
-}
-
-interface EnrollProps {
-  setUser: React.Dispatch<React.SetStateAction<User | null>>;
-  setIsAdmin: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+export default function EnrollPage() {
   const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-  const [randomHue, setRandomHue] = useState(0)
+  const { theme, setTheme } = useTheme();
 
   const { 
     register, 
@@ -59,87 +44,73 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
   });
 
   const password = watch("password");
+  const showConfirmPassword = Boolean(password && password.length > 0);
 
   useEffect(() => {
-    setMounted(true)
-    setRandomHue(Math.floor(Math.random() * 360))
-  }, [])
+    setMounted(true);
+  }, []);
 
-  useEffect(() => {
-    if (password && password.length > 0) {
-      setShowConfirmPassword(true);
-    } else {
-      setShowConfirmPassword(false);
-    }
-  }, [password]);
+  const gradientStyle = useMemo(() => {
+    const hue1 = Math.floor(Math.random() * 360);
+    const hue2 = (hue1 + 30) % 360;
+    const hue3 = (hue1 + 60) % 360;
+    return {
+      light: `linear-gradient(to bottom right, hsl(${hue1}, 60%, 94%), hsl(${hue2}, 55%, 96%), hsl(${hue3}, 50%, 95%))`,
+      dark: `linear-gradient(to bottom right, hsl(${hue1}, 50%, 30%), hsl(${hue2}, 45%, 35%), hsl(${hue3}, 40%, 40%))`,
+    };
+  }, []);
 
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light")
-  }
+  const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
 
   const onSubmit = async (data: EnrollFormData) => {
     setError('');
     try {
-      const { confirmPassword, companyName, ...enrollData } = data;
-      const combinedName = `${data.name}@${companyName}`;
+      const { confirmPassword, ...enrollData } = data;
       const submitData = { 
         ...enrollData,
-        name: combinedName, 
         role: 'admin',
         createdAt: new Date().toISOString().split("T")[0] 
       };
 
-      console.log("Sending Data:", submitData);
-
       const response = await api.post('/auth/register', submitData);
       const userData = response.data;
 
-      console.log("userData", userData);
       localStorage.setItem('token', userData.token);
-
       router.push('/');
-
     } catch (error) {
       console.error('Enrollment failed:', error);
       setError('Enrollment failed. Please try again.');
     }
   };
 
-  const handleHomeButton = () => {
-    router.push("/");
-  }
+  if (!mounted) return null;
 
-  if (!mounted) {
-    return null
-  }
-
-  const gradientStyle = {
-    backgroundImage: `linear-gradient(to bottom right, 
-        hsl(${randomHue}, 60%, 94%), 
-        hsl(${(randomHue + 30) % 360}, 55%, 96%), 
-        hsl(${(randomHue + 60) % 360}, 50%, 95%))`
-  }
-
-  const darkGradientStyle = {
-    backgroundImage: `linear-gradient(to bottom right, 
-        hsl(${randomHue}, 50%, 30%), 
-        hsl(${(randomHue + 30) % 360}, 45%, 35%), 
-        hsl(${(randomHue + 60) % 360}, 40%, 40%))`
-  }
+  const backgroundStyle = theme 
+    ? { backgroundImage: theme === 'dark' ? gradientStyle.dark : gradientStyle.light }
+    : { backgroundColor: 'white' };
 
   return (
     <div 
       className="min-h-screen text-gray-800 dark:text-gray-100 transition-colors duration-300"
-      style={theme === 'light' ? gradientStyle : darkGradientStyle}
+      style={backgroundStyle}
     >
       <div className="container mx-auto px-4 py-16 flex flex-col justify-between min-h-screen">
         <header className="text-center mb-16 relative">
-          <div className="relative flex">
+          <div className="relative flex justify-between">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => router.push("/")}
+              className="z-10"
+            >
+              <Home className='h-[1.2rem] w-[1.2rem]'/>
+              <span className='sr-only'>Home</span>
+            </Button>
             <Button
               variant="outline"
               size="icon"
               onClick={toggleTheme}
-              className="absolute right-0 top-0 z-10"
+              className="z-10"
             >
               {theme === "light" ? (
                 <Moon className="h-[1.2rem] w-[1.2rem]" />
@@ -147,16 +118,6 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
                 <Sun className="h-[1.2rem] w-[1.2rem]" />
               )}
               <span className="sr-only">Toggle theme</span>
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleHomeButton}
-              className="absolute z-10"
-            >
-              <Home className='h-[1.2rem] w-[1.2rem]'/>
-              <span className='sr-only'>Home</span>
             </Button>
           </div>
 
@@ -166,7 +127,7 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
             transition={{ duration: 0.8 }}
             className="text-6xl font-bold mb-4"
           >
-            Enroll Your Company
+            Jobfair Admin
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }}
@@ -174,7 +135,7 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="text-xl text-gray-600 dark:text-gray-200"
           >
-            Join Job Fair as a Company Admin
+            Join as Admin Maintenance Team
           </motion.p>
         </header>
 
@@ -187,51 +148,19 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
           <Card className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                  <Input
-                    type="text"
-                    placeholder="Full Name"
-                    {...register('name')}
-                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
-                  />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
-                </div>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Company Name"
-                    {...register('companyName')}
-                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
-                  />
-                  {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName.message}</p>}
-                </div>
-                <div>
-                  <Input
-                    type="email"
-                    placeholder="Email"
-                    {...register('email')}
-                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
-                  />
-                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
-                </div>
-                <div>
-                  <Input
-                    type="tel"
-                    placeholder="Phone Number"
-                    {...register('tel')}
-                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
-                  />
-                  {errors.tel && <p className="text-red-500 text-sm mt-1">{errors.tel.message}</p>}
-                </div>
-                <div>
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    {...register('password')}
-                    className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
-                  />
-                  {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
-                </div>
+                {['name', 'email', 'telephone', 'password'].map((field) => (
+                  <div key={field}>
+                    <Input
+                      type={field === 'password' ? 'password' : 'text'}
+                      placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                      {...register(field as keyof EnrollFormData)}
+                      className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
+                    />
+                    {errors[field as keyof EnrollFormData] && (
+                      <p className="text-red-500 text-sm mt-1">{errors[field as keyof EnrollFormData]?.message}</p>
+                    )}
+                  </div>
+                ))}
                 <AnimatePresence>
                   {showConfirmPassword && (
                     <motion.div
@@ -246,7 +175,9 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
                         {...register('confirmPassword')}
                         className="w-full bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600"
                       />
-                      {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>}
+                      {errors.confirmPassword && (
+                        <p className="text-red-500 text-sm mt-1">{errors.confirmPassword.message}</p>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -256,7 +187,7 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
                   className="w-full bg-zinc-600 hover:bg-zinc-700 text-white dark:bg-zinc-200 dark:hover:bg-zinc-400 dark:text-zinc-800 group"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Enrolling...' : 'Enroll Company'}
+                  {isSubmitting ? 'Enrolling...' : 'Join as Admin'}
                   <ArrowRight className="ml-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
                 </Button>
               </form>
@@ -269,10 +200,8 @@ export default function EnrollPage({ setUser, setIsAdmin }: EnrollProps) {
             </CardContent>
           </Card>
         </motion.div>
-
-        <footer className="text-center text-gray-600 dark:text-gray-200 text-sm mt-16">
-          © 2024 Job Fair. All rights reserved.
-        </footer>
+        
+        <Footer />
       </div>
     </div>
   );

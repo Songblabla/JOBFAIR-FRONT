@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,11 +14,7 @@ import {
   BarChart3,
   Search,
   Plus,
-  Briefcase,
-  Clock,
   AlertCircle,
-  ChevronsLeftIcon,
-  MoreVertical,
   Edit,
   Trash,
   Eye,
@@ -31,8 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
@@ -138,13 +132,6 @@ const AdminDashboard = () => {
     const business = (company.business || '').toLowerCase();
     const searchTerm = companySearchTerm.toLowerCase();
     return name.includes(searchTerm) || business.includes(searchTerm);
-  });
-
-  const filteredBookings = bookings.filter(booking => {
-    const user = (booking.user || '').toLowerCase();
-    const companyName = (booking.company?.name || '').toLowerCase();
-    const searchTerm = bookingSearchTerm.toLowerCase();
-    return user.includes(searchTerm) || companyName.includes(searchTerm);
   });
 
   const handleViewCompany = (id: string) => {
@@ -357,6 +344,10 @@ const AdminDashboard = () => {
         <AlertDescription>Unable to fetch user data. Please try logging in again.</AlertDescription>
       </Alert>
     );
+  }
+
+  if (user.role !== "admin") {
+    router.push("/company");
   }
 
   return (

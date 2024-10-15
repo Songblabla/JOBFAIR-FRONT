@@ -1,8 +1,8 @@
 
 export default function Footer() {
     return (
-        <div className="text-center text-muted-foreground text-sm mt-16 mb-8">
-            © 2024 Job Fair. All rights reserved.
-        </div>
+        <footer className="text-center text-gray-600 dark:text-gray-200 text-sm mt-16">
+          © 2024 Job Fair. All rights reserved.
+        </footer>
     );
 }

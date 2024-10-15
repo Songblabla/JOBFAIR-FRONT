@@ -3,10 +3,16 @@ interface User {
     name: string;
     email: string;
     tel: string;
-    role?: 'admin' | 'user';
+    role: 'admin' | 'user';
     password: string;
     createdAt?: string;
     }
 
 
-
+interface User {
+    _id?: string;
+    name: string;
+    email: string;
+    tel: string;
+    role: 'user' | 'admin';
+}
