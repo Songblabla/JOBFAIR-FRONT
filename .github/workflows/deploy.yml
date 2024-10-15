@@ -52,5 +52,5 @@ jobs:
               docker build -t jobfair-front .
               docker stop jobfair-frontend || true
               docker rm jobfair-frontend || true
-              docker run -itd -p 3051:3000 --name jobfair-frontend jobfair-front
+              docker run -itd --env-file .env -p 3051:3000 --name jobfair-frontend jobfair-front
             EOF
