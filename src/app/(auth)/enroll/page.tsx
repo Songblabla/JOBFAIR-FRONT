@@ -65,9 +65,8 @@ export default function EnrollPage() {
   const onSubmit = async (data: EnrollFormData) => {
     setError('');
     try {
-      const { confirmPassword, ...enrollData } = data;
       const submitData = { 
-        ...enrollData,
+        ...data,
         role: 'admin',
         createdAt: new Date().toISOString().split("T")[0] 
       };
@@ -148,7 +147,7 @@ export default function EnrollPage() {
           <Card className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg">
             <CardContent className="p-6">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                {['name', 'email', 'telephone', 'password'].map((field) => (
+                {['name', 'email', 'tel', 'password'].map((field) => (
                   <div key={field}>
                     <Input
                       type={field === 'password' ? 'password' : 'text'}

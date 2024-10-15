@@ -76,7 +76,7 @@ export default function Home({ user }: HomeProps) {
               </ul>
               <Link href="/enroll" passHref>
                 <Button variant="outline" className="w-full group">
-                  Become a JobFair Admin
+                  Join JobFair Admin
                   <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition" />
                 </Button>
               </Link>
