@@ -11,10 +11,8 @@ jobs:
           uses: actions/checkout@v4
           with:
             fetch-depth: 0
-
         - name: Gitleaks Action
           uses: zricethezav/gitleaks-action@master
-
     deploy:
         needs: security-scan
         runs-on: ubuntu-latest
@@ -34,10 +32,8 @@ jobs:
             mkdir -p ~/.ssh
             echo "Host ${{ secrets.SERVER_HOSTNAME }}" >> ~/.ssh/config
             echo "  ProxyCommand /usr/bin/cloudflared access ssh --hostname %h" >> ~/.ssh/config
-
         - name: Install sshpass
           run: sudo apt-get install sshpass
-
         - name: Execute commands on server
           env:
             SSHPASS: ${{ secrets.SERVER_PASSWORD }}
@@ -51,15 +47,10 @@ jobs:
                 cd JOBFAIR-FRONT
                 git pull origin main
               fi
-
               echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}" > .env
-
               docker image prune -af
               docker build -t jobfair-front .
               docker stop jobfair-frontend || true
               docker rm jobfair-frontend || true
               docker run -itd -p 3051:3000 --name jobfair-frontend jobfair-front
-              
-              # cd ../
-              # rm -rf JOBFAIR-FRONT
             EOF

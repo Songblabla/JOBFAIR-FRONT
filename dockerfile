@@ -1,15 +1,14 @@
-FROM node:22-alpine
+FROM oven/bun:1
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
-
-RUN npm install -g pnpm
-
-RUN pnpm install
-
 COPY . .
 
-EXPOSE 3000
+COPY .env .
 
-CMD ["pnpm", "dev"]
+RUN bun install
+ 
+ARG PORT
+EXPOSE ${PORT:-3000}
+ 
+CMD ["bun", "dev"]
