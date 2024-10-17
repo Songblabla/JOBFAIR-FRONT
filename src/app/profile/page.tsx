@@ -267,7 +267,7 @@ const ProfilePage = () => {
                           <div className="flex items-center mb-2">
                             <UserCircle className="w-4 h-4 mr-2" />
                             <p className="text-sm">
-                              User: {selectedBooking.user._id}
+                              User: {String(selectedBooking.user)}
                             </p>
                           </div>
                           <div className="flex items-center mb-2">
