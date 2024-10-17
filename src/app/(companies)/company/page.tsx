@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "@/lib/axios";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,44 +36,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-interface Company {
-  _id: string;
-  name: string;
-  address: string;
-  business: string;
-  province: string;
-  postalcode: string;
-  tel: string;
-  picture: string;
-}
-
-interface NewCompany {
-  name: string;
-  address: string;
-  business: string;
-  province: string;
-  postalcode: string;
-  tel: string;
-  picture: string;
-}
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  tel: string;
-  role: "user" | "admin";
-}
-
-interface Booking {
-  _id: string;
-  user: User;
-  company: Company;
-  bookingDate: string;
-}
+import { Company, NewCompany } from "@/types/company";
+import { User } from "@/types/user";
+import { Booking } from "@/types/booking";
 
 export default function Companies() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -108,9 +74,7 @@ export default function Companies() {
     fetchBookings();
   }, []);
 
-  useEffect(() => {
-    filterAndSortCompanies();
-  }, [companies, sortOrder, filterBusiness]);
+  
 
   const fetchCompanies = async () => {
     try {
@@ -137,11 +101,11 @@ export default function Companies() {
     }
   };
 
-  const filterAndSortCompanies = () => {
+  const filterAndSortCompanies = useCallback(() => {
     const filtered = companies.filter((company) =>
       company.business.toLowerCase().includes(filterBusiness.toLowerCase())
     );
-
+  
     filtered.sort((a, b) => {
       if (sortOrder === "asc") {
         return a.name.localeCompare(b.name);
@@ -149,9 +113,9 @@ export default function Companies() {
         return b.name.localeCompare(a.name);
       }
     });
-
+  
     setFilteredCompanies(filtered);
-  };
+  }, [companies, filterBusiness, sortOrder]);
 
   const handleCreateBooking = async () => {
     if (!selectedCompany || !selectedDate) {
@@ -226,6 +190,10 @@ export default function Companies() {
   const handleCompanyIdRoute = ({ id }: { id: string }) => {
     router.push(`/company/${id}`);
   };
+
+  useEffect(() => {
+    filterAndSortCompanies();
+  }, [filterAndSortCompanies]);
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">

@@ -6,13 +6,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: "user" | "admin";
-}
+import { User } from "@/types/user";
 
 interface HomeProps {
   user: User | null;

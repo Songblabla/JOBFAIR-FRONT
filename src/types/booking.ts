@@ -1,12 +1,9 @@
-interface Booking {
-    _id?: string;
-    bookingDate: string;
-    user: string; // This is the user ID
-    company: any
-    createdAt?: string;
-  }
+import { User } from "./user";
+import { Company } from "./company";
 
-  interface BookingInput {
-    bookingDate: string;
-    createdAt?: string;
-  }
+export interface Booking {
+  _id: string;
+  user: User;
+  company: Company;
+  bookingDate: string;
+}

@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -80,12 +79,7 @@ const ProfilePage = () => {
     fetchUserData();
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      fetchBookings();
-      fetchCompanies();
-    }
-  }, [user]);
+  
 
   const fetchUserData = async () => {
     try {
@@ -176,6 +170,13 @@ const ProfilePage = () => {
   const handleCompanyIdRoute = ({ id }: { id: string }) => {
     router.push(`/company/${id}`);
   };
+
+  useEffect(() => {
+      if (user) {
+        fetchBookings();
+        fetchCompanies();
+      }
+    }, [user]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">

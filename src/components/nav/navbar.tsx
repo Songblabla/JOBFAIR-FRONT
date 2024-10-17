@@ -32,8 +32,6 @@ export default function Navbar() {
   const router = useRouter();
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/enroll';
 
-  if (isAuthPage) return null;
-
   const [user, setUser] = useState<User | null>(null);
   const [isTokenChecked, setIsTokenChecked] = useState(false);
 
@@ -64,6 +62,8 @@ export default function Navbar() {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  if (isAuthPage) return null;
 
   const handleLogout = () => {
     localStorage.removeItem('token');
