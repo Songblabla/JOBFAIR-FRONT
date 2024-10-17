@@ -17,6 +17,8 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import toast from 'react-hot-toast';
 import api from "@/lib/axios";
+import { Company } from '@/types/company';
+import { Booking } from '@/types/booking';
 
 interface BookingManagementProps {
   bookings: Booking[];
@@ -47,7 +49,7 @@ const BookingManagement: React.FC<BookingManagementProps> = ({ bookings, setBook
     
     if (bookingSearchTerm) {
       filtered = filtered.filter(booking => 
-        booking.user.toLowerCase().includes(bookingSearchTerm.toLowerCase()) ||
+        booking.user._id?.toLowerCase().includes(bookingSearchTerm.toLowerCase()) ||
         booking.company.name.toLowerCase().includes(bookingSearchTerm.toLowerCase())
       );
     }
@@ -192,7 +194,7 @@ const BookingManagement: React.FC<BookingManagementProps> = ({ bookings, setBook
                 {filteredAndSortedBookings.map((booking) => (
                   <TableRow key={booking._id}>
                     <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{booking.user}</TableCell>
+                    <TableCell>{booking._id}</TableCell>
                     <TableCell>{booking.company.name}</TableCell>
                     <TableCell>
                       <Badge variant={new Date(booking.bookingDate) < new Date() ? "secondary" : "outline"}>

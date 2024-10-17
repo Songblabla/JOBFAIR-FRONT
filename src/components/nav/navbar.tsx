@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from '../theme/mode';
 import api from '@/lib/axios'; 
+import { User as UserType} from '@/types/user';
 
 const navItems = [
   { name: 'Home', path: '/' },
@@ -32,7 +33,7 @@ export default function Navbar() {
   const router = useRouter();
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/enroll';
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [isTokenChecked, setIsTokenChecked] = useState(false);
 
   const fetchUser = useCallback(async () => {

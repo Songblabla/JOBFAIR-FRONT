@@ -20,8 +20,8 @@ interface AnalyticsManagementProps {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
-const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, companies }) => {
-  const today = new Date();
+const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings }) => {
+  const today = useMemo(() => new Date(), []);
   const [startDate, setStartDate] = useState<Date | undefined>(today);
   const [endDate, setEndDate] = useState<Date | undefined>(addDays(today, 31));
   const [excludePastBookings, setExcludePastBookings] = useState(false);
@@ -35,7 +35,7 @@ const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, com
       }
       return isWithinRange;
     });
-  }, [bookings, startDate, endDate, excludePastBookings]);
+  }, [bookings, startDate, endDate, excludePastBookings, today]);
 
   const companyBookings = useMemo(() => {
     const bookingsByCompany = filteredBookings.reduce((acc, booking) => {

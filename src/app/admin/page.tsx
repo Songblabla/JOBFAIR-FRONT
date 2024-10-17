@@ -14,9 +14,10 @@ import BookingManagement from './booking';
 import AnalyticsManagement from './analytics';
 import { Booking } from '@/types/booking';
 import { Company } from '@/types/company';
+import { User as UserType } from '@/types/user';
 
 const AdminDashboard: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [error, setError] = useState<string | null>(null);
