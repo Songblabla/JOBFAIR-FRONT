@@ -137,7 +137,7 @@ const ProfilePage = () => {
       try {
         const response = await api.get<{ data: Booking[] }>("bookings");
         const userBookings = response.data.data.filter(
-          (booking) => booking.user._id === user._id
+          (booking) => String(booking.user) === String(user._id)
         );
         setBookings(userBookings);
       } catch (error) {

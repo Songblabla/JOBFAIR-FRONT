@@ -49,7 +49,7 @@ const BookingManagement: React.FC<BookingManagementProps> = ({ bookings, setBook
     
     if (bookingSearchTerm) {
       filtered = filtered.filter(booking => 
-        booking.user._id?.toLowerCase().includes(bookingSearchTerm.toLowerCase()) ||
+        String(booking.user).toLowerCase().includes(bookingSearchTerm.toLowerCase()) ||
         booking.company.name.toLowerCase().includes(bookingSearchTerm.toLowerCase())
       );
     }
@@ -194,7 +194,7 @@ const BookingManagement: React.FC<BookingManagementProps> = ({ bookings, setBook
                 {filteredAndSortedBookings.map((booking) => (
                   <TableRow key={booking._id}>
                     <TableCell>{new Date(booking.bookingDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{booking._id}</TableCell>
+                    <TableCell>{String(booking.user)}</TableCell>
                     <TableCell>{booking.company.name}</TableCell>
                     <TableCell>
                       <Badge variant={new Date(booking.bookingDate) < new Date() ? "secondary" : "outline"}>
