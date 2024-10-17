@@ -69,9 +69,8 @@ export default function RegisterPage() {
   const onSubmit = async (data: RegisterFormData) => {
     setError('');
     try {
-      const { confirmPassword, ...registerData } = data;
       const submitData = { 
-        ...registerData, 
+        ...data, 
         createdAt: new Date().toISOString().split("T")[0] 
       };
 
