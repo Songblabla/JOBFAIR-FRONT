@@ -10,6 +10,8 @@ import { format, addDays, parseISO, isWithinInterval, isBefore } from 'date-fns'
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Booking } from '@/types/booking';
+import { Company } from '@/types/company';
 
 interface AnalyticsManagementProps {
   bookings: Booking[];

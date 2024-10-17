@@ -12,6 +12,8 @@ import api from "@/lib/axios";
 import CompanyManagement from './company';
 import BookingManagement from './booking';
 import AnalyticsManagement from './analytics';
+import { Booking } from '@/types/booking';
+import { Company } from '@/types/company';
 
 const AdminDashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
