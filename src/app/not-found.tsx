@@ -106,7 +106,7 @@ const InterviewScene = ({ theme }: { theme: string }) => {
               fontSize="12"
               fill={theme === 'light' ? "#2D3748" : "#EDF2F7"}
             >
-              Where`&apos;`s the
+              Where&apos;s the
             </text>
             <text
               x="117"
@@ -170,7 +170,7 @@ export default function NotFound() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
       >
-        It looks like our job candidate (Page 404) didn`&apos;`t show up for the interview. Don`&apos;`t worry, we have plenty of other opportunities waiting for you!
+        It looks like our job candidate (Page 404) didn&apos;t show up for the interview. Don&apos;t worry, we have plenty of other opportunities waiting for you!
       </motion.p>
 
       <motion.div
