@@ -14,36 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import toast from 'react-hot-toast';
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: "user" | "admin";
-}
-
-interface Company {
-  _id: string;
-  name: string;
-  address: string;
-  business: string;
-  province: string;
-  postalcode: string;
-  tel: string;
-  picture: string;
-}
-
-interface Booking {
-  _id: string;
-  user: User;
-  company: Company;
-  bookingDate: string;
-}
-
-interface BookingsProps {
-  user: User;
-  isAdmin: boolean;
-}
+import { Company } from '@/types/company';
+import { Booking } from '@/types/booking';
 
 export default function Bookings() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -76,7 +48,7 @@ export default function Bookings() {
       setCompanies(response.data.data);
     } catch (error) {
       console.error('Error fetching companies:', error);
-      // setError('Failed to fetch companies. Please try again.');
+      setError('Failed to fetch companies. Please try again.');
     }
   };
 

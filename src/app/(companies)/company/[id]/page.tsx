@@ -9,7 +9,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -18,31 +17,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { set } from "date-fns";
-
-interface Company {
-  _id: string;
-  name: string;
-  address: string;
-  business: string;
-  province: string;
-  postalcode: string;
-  tel: string;
-  picture: string;
-}
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  tel: string;
-  role: "user" | "admin";
-}
+import { Company } from "@/types/company";
+import { User } from "@/types/user";
 
 const CompanyPage = ({ params }: { params: { id: string } }) => {
   const [company, setCompany] = useState<Company | null>(null);
   const [userData, setUserData] = useState<User | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editedCompany, setEditedCompany] = useState<Company | null>(null);
   const router = useRouter();
@@ -98,7 +78,6 @@ const CompanyPage = ({ params }: { params: { id: string } }) => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setCompany(editedCompany);
-      setIsEditing(false);
       toast.success("Company updated successfully!");
       setIsEditDialogOpen(false);
     } catch (error) {
