@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Plus, Settings, Eye, Edit, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from "@/lib/axios";
+import { Company } from '@/types/company';
 
 interface CompanyManagementProps {
   companies: Company[];

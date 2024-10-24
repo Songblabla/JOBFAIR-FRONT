@@ -31,32 +31,9 @@ import {
 } from "@/components/ui/carousel";
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
-
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  tel: string;
-  role: "user" | "admin";
-}
-
-interface Booking {
-  _id: string;
-  company: Company;
-  bookingDate: string;
-  user: string;
-}
-
-interface Company {
-  _id: string;
-  name: string;
-  address: string;
-  business: string;
-  province: string;
-  postalcode: string;
-  tel: string;
-  picture: string;
-}
+import { User } from "@/types/user";
+import { Booking } from "@/types/booking";
+import { Company } from "@/types/company";
 
 const ProfilePage = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -79,29 +56,12 @@ const ProfilePage = () => {
     fetchUserData();
   }, []);
 
-  
-
   const fetchUserData = async () => {
     try {
       const response = await api.get<{ data: User }>("auth/me");
       setUser(response.data.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
-    }
-  };
-
-  const fetchBookings = async () => {
-    if (!user) return;
-    try {
-      const response = await api.get<{ data: Booking[] }>("bookings");
-      // console.log(user._id);
-      // console.log(response.data.data)
-      const userBookings = response.data.data.filter(
-        (booking) => booking.user === user._id
-      );
-      setBookings(userBookings);
-    } catch (error) {
-      console.error("Error fetching bookings:", error);
     }
   };
 
@@ -172,11 +132,24 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-      if (user) {
-        fetchBookings();
-        fetchCompanies();
+    const fetchBookings = async () => {
+      if (!user) return;
+      try {
+        const response = await api.get<{ data: Booking[] }>("bookings");
+        const userBookings = response.data.data.filter(
+          (booking) => String(booking.user) === String(user._id)
+        );
+        setBookings(userBookings);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
       }
-    }, [user]);
+    };
+
+    if (user) {
+      fetchBookings();
+      fetchCompanies();
+    }
+  }, [user]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
@@ -294,7 +267,7 @@ const ProfilePage = () => {
                           <div className="flex items-center mb-2">
                             <UserCircle className="w-4 h-4 mr-2" />
                             <p className="text-sm">
-                              User: {selectedBooking.user}
+                              User: {String(selectedBooking.user)}
                             </p>
                           </div>
                           <div className="flex items-center mb-2">
@@ -376,7 +349,14 @@ const ProfilePage = () => {
                               {company.name}
                             </h3>
                             <p className="text-sm mb-4">{company.business}</p>
-                            <Button onClick={() => handleCompanyIdRoute({ id: company._id })} size="sm">Manage</Button>
+                            <Button
+                              onClick={() =>
+                                handleCompanyIdRoute({ id: company._id })
+                              }
+                              size="sm"
+                            >
+                              Manage
+                            </Button>
                           </CardContent>
                         </Card>
                       </div>

@@ -12,15 +12,15 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const [isLoading, setLoading] = useState(true);
 
-  const handleNavigation = (path: string) => {
-    if (pathname !== path) {
-      router.push(path);
-    } else {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const handleNavigation = (path: string) => {
+      if (pathname !== path) {
+        router.push(path);
+      } else {
+        setLoading(false);
+      }
+    };
+
     const token = localStorage.getItem('token');
 
     if (PUBLIC_PATHS.includes(pathname)) {

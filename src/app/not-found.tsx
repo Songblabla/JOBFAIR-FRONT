@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { Moon, Sun, ArrowRight } from "lucide-react";
 
-const InterviewScene = ({ theme }: { theme: string }) => {
+const InterviewScene = ({ theme }: { theme?: string }) => {
   const [showText, setShowText] = useState(false);
 
   useEffect(() => {
