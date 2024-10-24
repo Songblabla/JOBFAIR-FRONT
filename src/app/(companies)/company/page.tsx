@@ -74,8 +74,6 @@ export default function Companies() {
     fetchBookings();
   }, []);
 
-  
-
   const fetchCompanies = async () => {
     try {
       const response = await api.get<{ data: Company[] }>("companies");
@@ -94,10 +92,13 @@ export default function Companies() {
   const fetchBookings = async () => {
     try {
       const response = await api.get<{ data: Booking[] }>("bookings");
-      setBookings(response.data.data);
+      const userBookings = response.data.data.filter(
+        (booking) => String(booking.user) === String(userData?._id)
+      );
+      setBookings(userBookings);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
-      toast.error('Failed to fetch bookings. Please try again.');
+      console.error("Error fetching bookings:", error);
+      toast.error("Failed to fetch bookings. Please try again.");
     }
   };
 
@@ -105,7 +106,7 @@ export default function Companies() {
     const filtered = companies.filter((company) =>
       company.business.toLowerCase().includes(filterBusiness.toLowerCase())
     );
-  
+
     filtered.sort((a, b) => {
       if (sortOrder === "asc") {
         return a.name.localeCompare(b.name);
@@ -113,7 +114,7 @@ export default function Companies() {
         return b.name.localeCompare(a.name);
       }
     });
-  
+
     setFilteredCompanies(filtered);
   }, [companies, filterBusiness, sortOrder]);
 
@@ -269,16 +270,13 @@ export default function Companies() {
 
           <div className="bg-background z-10 py-4 mt-4">
             <div className="flex flex-col sm:flex-row gap-4">
-              <Input
-                placeholder="Business"
-                value={filterBusiness}
-                onChange={(e) => setFilterBusiness(e.target.value)}
-                className="w-25"
-                disabled
-              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button>Filter by Business</Button>
+                  <Button>
+                    {filterBusiness
+                      ? `${filterBusiness}`
+                      : "Filter by Business"}
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56">
                   <DropdownMenuLabel>Business</DropdownMenuLabel>
@@ -353,77 +351,81 @@ export default function Companies() {
                     >
                       View Company
                     </Button>
-                    {bookings.length < 3  && (
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                      <DialogTrigger asChild>
-                        <Button
-                          onClick={() => setSelectedCompany(company)}
-                        >
-                          Create Booking
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                          <DialogTitle>Create New Booking</DialogTitle>
-                          <DialogDescription>
-                            Create your booking here. Click save when
-                            you&apos;re done.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="company" className="text-right">
-                              Company
-                            </Label>
-                            <Input
-                              id="company"
-                              value={selectedCompany?.name || ""}
-                              className="col-span-3"
-                              readOnly
-                            />
-                          </div>
-                          <div className="grid grid-cols-4 gap-4">
-                            <Label htmlFor="bookingDate" className="text-right">
-                              Booking Date
-                            </Label>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "w-[240px] justify-start text-left font-normal",
-                                    !selectedDate && "text-muted-foreground"
-                                  )}
-                                >
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {selectedDate ? (
-                                    format(selectedDate, "PPP")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
-                                </Button>
-                              </PopoverTrigger>
-                              <PopoverContent
-                                className="w-auto p-0"
-                                align="start"
-                              >
-                                <Calendar
-                                  mode="single"
-                                  selected={selectedDate}
-                                  onSelect={setSelectedDate}
-                                  initialFocus
-                                />
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button type="submit" onClick={handleCreateBooking}>
-                            Confirm
+                    {bookings.length < 3 && (
+                      <Dialog
+                        open={isDialogOpen}
+                        onOpenChange={setIsDialogOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <Button onClick={() => setSelectedCompany(company)}>
+                            Create Booking
                           </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Create New Booking</DialogTitle>
+                            <DialogDescription>
+                              Create your booking here. Click save when
+                              you&apos;re done.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                              <Label htmlFor="company" className="text-right">
+                                Company
+                              </Label>
+                              <Input
+                                id="company"
+                                value={selectedCompany?.name || ""}
+                                className="col-span-3"
+                                readOnly
+                              />
+                            </div>
+                            <div className="grid grid-cols-4 gap-4">
+                              <Label
+                                htmlFor="bookingDate"
+                                className="text-right"
+                              >
+                                Booking Date
+                              </Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "w-[240px] justify-start text-left font-normal",
+                                      !selectedDate && "text-muted-foreground"
+                                    )}
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {selectedDate ? (
+                                      format(selectedDate, "PPP")
+                                    ) : (
+                                      <span>Pick a date</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  className="w-auto p-0"
+                                  align="start"
+                                >
+                                  <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={setSelectedDate}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button type="submit" onClick={handleCreateBooking}>
+                              Confirm
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     )}
                   </div>
                 </CardContent>

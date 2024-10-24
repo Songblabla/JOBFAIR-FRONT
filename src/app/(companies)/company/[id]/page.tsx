@@ -159,7 +159,7 @@ const CompanyPage = ({ params }: { params: { id: string } }) => {
   useEffect(() => {
     if (company) fetchBookings();
   }, [company, fetchBookings]);
-  
+
   return (
     <div className="container mx-auto px-4 py-8">
       {company ? (
@@ -194,16 +194,16 @@ const CompanyPage = ({ params }: { params: { id: string } }) => {
               </div>
             </div>
             {userData?.role === "admin" && (
-              <div className="mt-4 md:mt-0 md:ml-4 flex flex-col md:flex-row">
+              <div className="mt-4 md:mt-0 md:ml-4 flex flex-col gap-2 md:flex-row md:gap-4">
                 <Button
-                  className="btn-primary"
+                  className="btn-primary w-full md:w-auto"
                   onClick={() => setIsEditDialogOpen(true)}
                 >
                   Edit
                 </Button>
                 <Button
                   variant="destructive"
-                  className="ml-4"
+                  className="w-full md:w-auto"
                   onClick={handleDeleteCompany}
                 >
                   Delete
