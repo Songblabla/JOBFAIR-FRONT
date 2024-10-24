@@ -16,7 +16,7 @@ import { Booking } from '@/types/booking';
 import { Company } from '@/types/company';
 
 const AdminDashboard: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<typeof User | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [error, setError] = useState<string | null>(null);

@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,7 +21,7 @@ interface AnalyticsManagementProps {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
 
 const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, companies }) => {
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const [startDate, setStartDate] = useState<Date | undefined>(today);
   const [endDate, setEndDate] = useState<Date | undefined>(addDays(today, 31));
   const [excludePastBookings, setExcludePastBookings] = useState(false);
@@ -29,13 +29,13 @@ const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, com
   const filteredBookings = useMemo(() => {
     return bookings.filter(booking => {
       const bookingDate = parseISO(booking.bookingDate);
-      const isWithinRange = isWithinInterval(bookingDate, { start: startDate!, end: endDate! });
+      const isWithinRange = startDate && endDate && isWithinInterval(bookingDate, { start: startDate, end: endDate });
       if (excludePastBookings) {
         return isWithinRange && !isBefore(bookingDate, today);
       }
       return isWithinRange;
     });
-  }, [bookings, startDate, endDate, excludePastBookings]);
+  }, [bookings, startDate, endDate, excludePastBookings, today]);
 
   const companyBookings = useMemo(() => {
     const bookingsByCompany = filteredBookings.reduce((acc, booking) => {
@@ -53,9 +53,11 @@ const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, com
   }, [filteredBookings]);
 
   const bookingsByDate = useMemo(() => {
+    if (!startDate || !endDate) return [];
+
     const bookingCounts: Record<string, number> = {};
-    let currentDate = new Date(startDate!);
-    while (currentDate <= endDate!) {
+    let currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
       bookingCounts[format(currentDate, 'yyyy-MM-dd')] = 0;
       currentDate = addDays(currentDate, 1);
     }
@@ -69,6 +71,25 @@ const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, com
 
     return Object.entries(bookingCounts).map(([date, count]) => ({ date, count }));
   }, [filteredBookings, startDate, endDate]);
+
+  const companiesWithoutBookings = useMemo(() => {
+    const companiesWithBookings = new Set(filteredBookings.map(booking => booking.company._id));
+    return companies.filter(company => !companiesWithBookings.has(company._id));
+  }, [filteredBookings, companies]);
+
+  const handleStartDateChange = useCallback((date: Date | undefined) => {
+    setStartDate(date);
+    if (date && endDate && date > endDate) {
+      setEndDate(addDays(date, 31));
+    }
+  }, [endDate]);
+
+  const handleEndDateChange = useCallback((date: Date | undefined) => {
+    setEndDate(date);
+    if (date && startDate && date < startDate) {
+      setStartDate(date);
+    }
+  }, [startDate]);
 
   return (
     <Card>
@@ -134,6 +155,20 @@ const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, com
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Companies Without Bookings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="mb-2">Total: {companiesWithoutBookings.length}</p>
+                  <ul className="list-disc pl-5">
+                    {companiesWithoutBookings.slice(0, 5).map(company => (
+                      <li key={company._id}>{company.name}</li>
+                    ))}
+                    {companiesWithoutBookings.length > 5 && <li>...</li>}
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
           <TabsContent value="bookings">
@@ -158,7 +193,7 @@ const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, com
                     <Calendar
                       mode="single"
                       selected={startDate}
-                      onSelect={setStartDate}
+                      onSelect={handleStartDateChange}
                       initialFocus
                     />
                   </PopoverContent>
@@ -184,30 +219,52 @@ const AnalyticsManagement: React.FC<AnalyticsManagementProps> = ({ bookings, com
                     <Calendar
                       mode="single"
                       selected={endDate}
-                      onSelect={setEndDate}
+                      onSelect={handleEndDateChange}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
               </div>
             </div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Bookings Over Time</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={bookingsByDate}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="count" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Bookings Over Time</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={bookingsByDate}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="count" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cumulative Bookings</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={bookingsByDate.map((item, index, array) => ({
+                      ...item,
+                      cumulative: array.slice(0, index + 1).reduce((sum, i) => sum + i.count, 0)
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend />
+                      <Line type="monotone" dataKey="cumulative" stroke="#82ca9d" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </CardContent>
