@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/axios';
 import { motion } from 'framer-motion';
 import { format } from "date-fns";
@@ -14,10 +14,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import toast from 'react-hot-toast';
+import { User } from "@/types/user";
 import { Company } from '@/types/company';
 import { Booking } from '@/types/booking';
 
 export default function Bookings() {
+  const [user, setUser] = useState<User | null>(null);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
@@ -27,21 +29,21 @@ export default function Bookings() {
     new Date()
   );
 
-  useEffect(() => {
-    fetchBookings();
-    fetchCompanies();
-  }, []);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
-      const response = await api.get<{ data: Booking[] }>("bookings");
-      setBookings(response.data.data);
+      const response = await api.get<{ data: Booking[] }>('bookings');
+      if (user) {
+        const userBookings = response.data.data.filter(
+          (booking) => String(booking.user) === String(user._id)
+        );
+        setBookings(userBookings);
+      }
     } catch (error) {
       console.error('Error fetching bookings:', error);
       toast.error('Failed to fetch bookings. Please try again.');
     }
-  };
-
+  }, [user]); 
+  
   const fetchCompanies = async () => {
     try {
       const response = await api.get<{ data: Company[] }>("companies");
@@ -105,6 +107,29 @@ export default function Bookings() {
       toast.error('Failed to update booking. Please try again.');
     }
   };
+
+  const fetchUserData = async () => {
+    try {
+      const response = await api.get<{ data: User }>("auth/me");
+      setUser(response.data.data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  useEffect(() => {
+    const initialize = async () => {
+      await fetchUserData(); // Fetch user first
+      await fetchCompanies(); // Fetch companies second
+    };
+    initialize();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchBookings(); // Fetch bookings only after user is loaded
+    }
+  }, [user, fetchBookings]);
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
