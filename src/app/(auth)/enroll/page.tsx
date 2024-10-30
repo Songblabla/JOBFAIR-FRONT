@@ -76,6 +76,7 @@ export default function EnrollPage() {
 
       localStorage.setItem('token', userData.token);
       router.push('/');
+      window.location.reload();
     } catch (error) {
       console.error('Enrollment failed:', error);
       setError('Enrollment failed. Please try again.');

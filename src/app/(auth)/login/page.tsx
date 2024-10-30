@@ -60,6 +60,7 @@ export default function LoginPage() {
         const userData = response.data;
         localStorage.setItem('token', userData.token);
         router.push('/');
+        window.location.reload();
       } else {
         throw new Error('Login failed');
       }

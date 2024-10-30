@@ -80,6 +80,7 @@ export default function RegisterPage() {
       localStorage.setItem('token', userData.token);
 
       router.push('/');
+      window.location.reload();
     } catch (error) {
       console.error('Registration failed:', error);
       setError('Registration failed. Please try again.');

@@ -62,6 +62,24 @@ export default function Navbar() {
 
   useEffect(() => {
     fetchUser();
+
+    
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token') {
+        fetchUser();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    
+    const handleLogin = () => fetchUser();
+    window.addEventListener('login', handleLogin);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('login', handleLogin);
+    };
   }, [fetchUser]);
 
   if (isAuthPage) return null;
