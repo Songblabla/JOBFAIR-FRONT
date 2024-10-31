@@ -79,14 +79,14 @@ const CompanyPage = ({ params }: { params: { id: string } }) => {
     try {
       const response = await api.get<{ data: Booking[] }>("bookings");
       const userBookings = response.data.data.filter(
-        (booking) => booking.company.name === company?.name
+        (booking) => booking.company.name === company?.name && String(booking.user) === String(userData?._id)
       );
       setBookings(userBookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
       toast.error("Failed to fetch bookings. Please try again.");
     }
-  }, [company?.name]);
+  }, [company?.name, userData?._id]);
 
   const handleUpdateCompany = async () => {
     if (!editedCompany) {
