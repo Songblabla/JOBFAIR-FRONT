@@ -80,7 +80,7 @@ export default function Navbar() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('login', handleLogin);
     };
-  }, [fetchUser]);
+  }, [localStorage.getItem('token')]);
 
   if (isAuthPage) return null;
 
