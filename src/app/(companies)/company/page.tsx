@@ -68,12 +68,6 @@ export default function Companies() {
   const router = useRouter();
   const [bookings, setBookings] = useState<Booking[]>([]);
 
-  useEffect(() => {
-    fetchCompanies();
-    handleGetMe();
-    fetchBookings();
-  }, []);
-
   const fetchCompanies = async () => {
     try {
       const response = await api.get<{ data: Company[] }>("companies");
@@ -89,9 +83,14 @@ export default function Companies() {
     }
   };
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
+      const userId = userData?._id;
+      if (!userId) {
+        return;
+      }
       const response = await api.get<{ data: Booking[] }>("bookings");
+
       const userBookings = response.data.data.filter(
         (booking) => String(booking.user) === String(userData?._id)
       );
@@ -100,7 +99,7 @@ export default function Companies() {
       console.error("Error fetching bookings:", error);
       toast.error("Failed to fetch bookings. Please try again.");
     }
-  };
+  }, [userData?._id]);
 
   const filterAndSortCompanies = useCallback(() => {
     const filtered = companies.filter((company) =>
@@ -146,6 +145,10 @@ export default function Companies() {
 
   const handleGetMe = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        return;
+      }
       const response = await api.get(`auth/me`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
@@ -195,6 +198,12 @@ export default function Companies() {
   useEffect(() => {
     filterAndSortCompanies();
   }, [filterAndSortCompanies]);
+
+  useEffect(() => {
+    fetchCompanies();
+    handleGetMe();
+    fetchBookings();
+  }, [fetchBookings]);
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors duration-300">

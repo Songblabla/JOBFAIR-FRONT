@@ -1,22 +1,38 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import api from '@/lib/axios';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from "react";
+import api from "@/lib/axios";
+import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { CalendarIcon, ChevronRight, Plus, X } from 'lucide-react';
+import { CalendarIcon, ChevronRight, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import { User } from "@/types/user";
-import { Company } from '@/types/company';
-import { Booking } from '@/types/booking';
+import { Company } from "@/types/company";
+import { Booking } from "@/types/booking";
 
 export default function Bookings() {
   const [user, setUser] = useState<User | null>(null);
@@ -24,33 +40,35 @@ export default function Bookings() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date()
   );
 
   const fetchBookings = useCallback(async () => {
     try {
-      const response = await api.get<{ data: Booking[] }>('bookings');
-      if (user) {
-        const userBookings = response.data.data.filter(
-          (booking) => String(booking.user) === String(user._id)
-        );
-        setBookings(userBookings);
+      const userId = user?._id;
+      if (!userId) {
+        return;
       }
+      const response = await api.get<{ data: Booking[] }>("bookings");
+      const userBookings = response.data.data.filter(
+        (booking) => String(booking.user) === String(user._id)
+      );
+      setBookings(userBookings);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
-      toast.error('Failed to fetch bookings. Please try again.');
+      console.error("Error fetching bookings:", error);
+      toast.error("Failed to fetch bookings. Please try again.");
     }
-  }, [user]); 
-  
+  }, [user]);
+
   const fetchCompanies = async () => {
     try {
       const response = await api.get<{ data: Company[] }>("companies");
       setCompanies(response.data.data);
     } catch (error) {
-      console.error('Error fetching companies:', error);
-      setError('Failed to fetch companies. Please try again.');
+      console.error("Error fetching companies:", error);
+      setError("Failed to fetch companies. Please try again.");
     }
   };
 
@@ -83,33 +101,41 @@ export default function Bookings() {
   const handleDeleteBooking = async (id: string) => {
     try {
       await api.delete(`bookings/${id}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       fetchBookings();
-      toast.success('Booking deleted successfully!');
+      toast.success("Booking deleted successfully!");
     } catch (error) {
-      console.error('Error deleting booking:', error);
-      toast.error('Failed to delete booking. Please try again.');
+      console.error("Error deleting booking:", error);
+      toast.error("Failed to delete booking. Please try again.");
     }
   };
 
   const handleUpdateBooking = async (id: string, newDate: Date) => {
     try {
-      await api.put(`bookings/${id}`, {
-        bookingDate: newDate.toISOString()
-      }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
+      await api.put(
+        `bookings/${id}`,
+        {
+          bookingDate: newDate.toISOString(),
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        }
+      );
       fetchBookings();
-      toast.success('Booking updated successfully!');
+      toast.success("Booking updated successfully!");
     } catch (error) {
-      console.error('Error updating booking:', error)
-      toast.error('Failed to update booking. Please try again.');
+      console.error("Error updating booking:", error);
+      toast.error("Failed to update booking. Please try again.");
     }
   };
 
   const fetchUserData = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        return;
+      }
       const response = await api.get<{ data: User }>("auth/me");
       setUser(response.data.data);
     } catch (error) {
@@ -172,13 +198,21 @@ export default function Bookings() {
                 <DialogTitle>Book New Interview</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <Select onValueChange={(value) => setSelectedCompany(companies.find(company => company._id === value) || null)}>
+                <Select
+                  onValueChange={(value) =>
+                    setSelectedCompany(
+                      companies.find((company) => company._id === value) || null
+                    )
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Company" />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((company) => (
-                      <SelectItem key={company._id} value={company._id}>{company.name}</SelectItem>
+                      <SelectItem key={company._id} value={company._id}>
+                        {company.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -227,9 +261,12 @@ export default function Bookings() {
           {bookings.map((booking) => (
             <Card key={booking._id}>
               <CardContent className="p-6">
-                <h2 className="text-2xl font-semibold mb-4">{booking.company.name}</h2>
+                <h2 className="text-2xl font-semibold mb-4">
+                  {booking.company.name}
+                </h2>
                 <p className="text-muted-foreground mb-4">
-                  <strong>Date:</strong> {format(new Date(booking.bookingDate), 'PPP')}
+                  <strong>Date:</strong>{" "}
+                  {format(new Date(booking.bookingDate), "PPP")}
                 </p>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -242,14 +279,16 @@ export default function Bookings() {
                     <Calendar
                       mode="single"
                       selected={new Date(booking.bookingDate)}
-                      onSelect={(date) => date && handleUpdateBooking(booking._id, date)}
+                      onSelect={(date) =>
+                        date && handleUpdateBooking(booking._id, date)
+                      }
                       disabled={(date) => date < new Date()}
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={() => handleDeleteBooking(booking._id)}
                   className="w-full group"
                 >
