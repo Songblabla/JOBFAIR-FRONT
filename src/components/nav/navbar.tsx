@@ -62,7 +62,6 @@ export default function Navbar() {
 
   useEffect(() => {
     fetchUser();
-
     
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'token') {
