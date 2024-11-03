@@ -47,6 +47,7 @@ jobs:
                 cd JOBFAIR-FRONT
                 git pull origin main
               fi
+              
               echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}" > .env
               docker image prune -af
               docker build -t jobfair-front .
