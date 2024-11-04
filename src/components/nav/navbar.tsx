@@ -86,6 +86,16 @@ export default function Navbar() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setUser(null);
+
+    localStorage.clear();
+    sessionStorage.clear();
+
+    document.cookie.split(";").forEach(cookie => {
+      document.cookie = cookie
+        .replace(/^ +/, "")
+        .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
+    });
+
     router.push('/');
   };
 
