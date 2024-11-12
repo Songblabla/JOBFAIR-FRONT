@@ -1,0 +1,51 @@
+name: Code check and build
+
+on:
+  pull_request:
+    branches: ['*']
+  push:
+    branches: ['*']
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    name: Check formatting
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun format:check
+
+  lint:
+    runs-on: ubuntu-latest
+    name: Check linting
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    name: Type check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun typecheck
+
+  build:
+    runs-on: ubuntu-latest
+    name: Production build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - run: bun install
+      - run: bun run build

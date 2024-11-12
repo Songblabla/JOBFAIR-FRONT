@@ -62,7 +62,7 @@ export default function DebugClear() {
 
   useEffect(() => {
     clearAllData();
-  }, []);
+  });
 
   return (
     <div className="min-h-screen w-full bg-[#F5F5F7] dark:bg-[#1D1D1F] flex items-center justify-center p-4">
