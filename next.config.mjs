@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
     reactStrictMode: true,
     env: {
@@ -13,5 +14,7 @@ const nextConfig = {
       ],
     },
   };
+
+console.log("Backend URL", process.env.NEXT_PUBLIC_BACKEND_URL);
 
 export default nextConfig;
