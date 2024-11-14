@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-console.log("Backend URL", process.env.NEXT_PUBLIC_BACKEND_URL);
+// console.log("Backend URL", process.env.NEXT_PUBLIC_BACKEND_URL);
 
 const api = axios.create({
-  baseURL: "https://jobfairbackend.tsunyanapat.com/api/v1",  
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,  
   headers: {
     'Content-Type': 'application/json',
   },
