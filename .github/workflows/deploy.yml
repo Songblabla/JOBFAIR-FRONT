@@ -50,7 +50,7 @@ jobs:
               
               echo "NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}" > .env
               docker image prune -af
-              docker build -t jobfair-front .
+              docker build --no-cache -t jobfair-front .
               docker stop jobfair-frontend || true
               docker rm jobfair-frontend || true
               docker run -itd --env-file .env -p 3051:3000 --name jobfair-frontend jobfair-front
