@@ -275,6 +275,7 @@ const BookingManagement: React.FC<BookingManagementProps> = ({ bookings, setBook
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
+                    disabled={(date) => date < new Date()}
                     initialFocus
                   />
                 </PopoverContent>
