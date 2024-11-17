@@ -355,7 +355,7 @@ export default function Companies() {
                   </div>
                   <div className="flex-grow">
                     <Button
-                      className="mb-4 md:mr-2 sm:mr-2"
+                      className="mr-2 mb-4 md:mr-2 sm:mr-2"
                       onClick={() => handleCompanyIdRoute({ id: company._id })}
                     >
                       View Company
